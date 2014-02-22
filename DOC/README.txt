@@ -1,0 +1,17 @@
+Objective: Measure the delay, throughput of WebServer performing a sequence of defined requests or getting the same page
+
+DONE:
+	- Same request
+
+TODO:
+	- Create easy request for Post,Put,Delete,Get
+	- Create action per type of interface:
+		- Create/Delete/Modify Question
+		- Create/Delete/Modify Answer
+		- Create/Delete/Modify Comment
+	- Create request queue for execution per thread
+	- Store anwsers and requests to compare
+	- Compare
+	- Statistics records
+	- Graphics for matlab (file)
+	- Create a pupet master and slaves to deploy a distributed evaluation system
