@@ -19,3 +19,12 @@ TODO:
 OPTIONS FOR REST ON JAVA:
 jersey - JAX-RS production quality API
 grizzly - The container
+
+http://www.vogella.com/tutorials/REST/article.html
+https://grizzly.java.net/
+http://www.javarants.com/2008/12/27/using-jax-rs-with-protocol-buffers-for-high-performance-rest-apis/
+
+
+
+Generate protocol buffer:
+protoc -I=src --java_out=src src/addressbook.proto 
