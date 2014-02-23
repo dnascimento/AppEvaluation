@@ -1,0 +1,28 @@
+package inesc;
+
+option java_package = "inesc.shared";
+option java_outer_classname = "AppEvaluationProtos";
+
+message Parameter{
+	required string key;
+	required string value;
+}
+	
+message AppRequest {
+	enum ReqType{
+		GET = 0;
+		POST = 1;
+		PUT = 2;
+		DELETE = 3;
+	}
+		
+	required ReqType type = 1;
+	required string url = 2;
+	required int32 nExec = 3;
+	repeated Parameter parameters = 4;
+
+}
+
+message AppReqList {
+  repeated AppRequest requests = 1;
+}

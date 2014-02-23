@@ -1,4 +1,4 @@
-package inesc;
+package inesc.slave.askClient;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,7 +19,7 @@ class GetThread extends
     private final HttpGet httpget;
     private final int id;
     private int replays;
-    private int delay;
+    private final int delay;
 
     public GetThread(CloseableHttpClient httpClient,
             HttpGet httpget,

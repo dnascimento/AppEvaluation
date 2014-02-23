@@ -20,11 +20,27 @@ OPTIONS FOR REST ON JAVA:
 jersey - JAX-RS production quality API
 grizzly - The container
 
-http://www.vogella.com/tutorials/REST/article.html
-https://grizzly.java.net/
 http://www.javarants.com/2008/12/27/using-jax-rs-with-protocol-buffers-for-high-performance-rest-apis/
 
 
+3 Components:
+Pupet - Invokes the rest API
+restAPI - Retrieves the requests
+client - execute the requests
 
-Generate protocol buffer:
-protoc -I=src --java_out=src src/addressbook.proto 
+Messages between Pupet and Slaves:
+	List Requests:
+		Request:
+			Type,URL,Parameters,number of executions (Nexec)
+	
+	List Response:
+		Response:
+			ClientID, Content, Delay
+	
+	StartRequesting
+	
+	InitClient
+		ClientID
+	
+
+
