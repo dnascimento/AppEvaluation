@@ -15,3 +15,7 @@ TODO:
 	- Statistics records
 	- Graphics for matlab (file)
 	- Create a pupet master and slaves to deploy a distributed evaluation system
+
+OPTIONS FOR REST ON JAVA:
+jersey - JAX-RS production quality API
+grizzly - The container

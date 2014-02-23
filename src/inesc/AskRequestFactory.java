@@ -10,7 +10,7 @@ public class AskRequestFactory {
 
     // URL, TYPE, ARGS LIST
     HttpRequest createRequest(String url, ReqType type, String... args) {
-        HttpPost request = null;
+        HttpRequest request = null;
         switch (type) {
         case GET:
             request = new HttpGet(url);
@@ -20,14 +20,12 @@ public class AskRequestFactory {
             break;
         case POST:
             request = new HttpPost(url);
-            request.
             break;
         case DELETE:
             request = new HttpDelete(url);
             break;
         }
-        request
-        
+
         return request;
     }
 }
