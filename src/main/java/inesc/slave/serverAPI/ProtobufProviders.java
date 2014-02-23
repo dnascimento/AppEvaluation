@@ -1,4 +1,4 @@
-package inesc.serverAPI;
+package inesc.slave.serverAPI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,6 +36,7 @@ public class ProtobufProviders {
             return Message.class.isAssignableFrom(type);
         }
 
+        @SuppressWarnings("rawtypes")
         public Message readFrom(
                 Class<Message> type,
                     Type genericType,
@@ -84,6 +85,7 @@ public class ProtobufProviders {
             return bytes.length;
         }
 
+        @SuppressWarnings("rawtypes")
         public void writeTo(
                 Message m,
                     Class type,

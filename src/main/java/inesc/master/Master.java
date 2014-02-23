@@ -1,0 +1,39 @@
+package inesc.master;
+
+import inesc.shared.AppEvaluationProtos.AppReqList;
+import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.slave.serverAPI.ProtobufProviders;
+
+import java.net.URI;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+
+/**
+ * Responsible for:
+ * - Track existing slaves
+ * - Send requests to every slave
+ * - Collect responses
+ * 
+ * @author darionascimento
+ */
+public class Master {
+    private final WebResource r;
+
+    public Master(URI url) {
+        ClientConfig cc = new DefaultClientConfig();
+        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
+        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
+        Client c = Client.create(cc);
+        r = c.resource(url);
+    }
+
+    public void sendRequest(AppReqList requestList) {
+        WebResource wr = r.path("requests");
+        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
+                                                                 requestList);
+        System.out.println(res);
+    }
+}

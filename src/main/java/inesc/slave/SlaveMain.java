@@ -1,4 +1,4 @@
-package inesc.serverAPI;
+package inesc.slave;
 
 import java.io.IOException;
 import java.net.URI;
@@ -10,7 +10,7 @@ import javax.ws.rs.core.UriBuilder;
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
-public class Main {
+public class SlaveMain {
     public static final URI BASE_URI = UriBuilder.fromUri("http://localhost/")
                                                  .port(9998)
                                                  .build();
@@ -28,7 +28,7 @@ public class Main {
 
     public static SelectorThread createServer(URI uri) throws IOException {
         Map<String, String> initParams = new HashMap<String, String>();
-        initParams.put("com.sun.jersey.config.property.packages", "inesc.restAPI");
+        initParams.put("com.sun.jersey.config.property.packages", "inesc.slave");
         return GrizzlyWebContainerFactory.create(uri, initParams);
     }
 

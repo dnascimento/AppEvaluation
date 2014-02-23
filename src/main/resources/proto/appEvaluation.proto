@@ -4,8 +4,8 @@ option java_package = "inesc.shared";
 option java_outer_classname = "AppEvaluationProtos";
 
 message Parameter{
-	required string key;
-	required string value;
+	required string key = 1;
+	required string value = 2;
 }
 	
 message AppRequest {
@@ -25,4 +25,14 @@ message AppRequest {
 
 message AppReqList {
   repeated AppRequest requests = 1;
+  required numberOfClients = 2;
+}
+
+message AppResponse{
+	optional string text = 1;
+	enum ResStatus{
+		ERROR = 0;
+		OK = 1;
+	}
+	optional ResStatus status = 2;
 }
