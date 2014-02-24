@@ -14,6 +14,8 @@ import javax.ws.rs.core.UriBuilder;
 
 import junit.framework.TestCase;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -32,12 +34,15 @@ public class MainTest extends
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        PropertyConfigurator.configure("log4j.properties");
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put("com.sun.jersey.config.property.packages", "inesc.slave");
         threadSelector = GrizzlyWebContainerFactory.create(UriBuilder.fromUri("http://localhost/")
                                                                      .port(9998)
                                                                      .build(),
                                                            initParams);
+
+
         ClientConfig cc = new DefaultClientConfig();
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
@@ -66,6 +71,11 @@ public class MainTest extends
                                        .build();
         AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
                                                                  reqList);
+        assertEquals(AppResponse.ResStatus.OK, res.getStatus());
+
+        // Start Requests
+        wr = r.path("requests");
+        res = wr.get(AppResponse.class);
         assertEquals(AppResponse.ResStatus.OK, res.getStatus());
 
     }

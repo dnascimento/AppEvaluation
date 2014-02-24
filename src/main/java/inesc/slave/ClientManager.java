@@ -48,12 +48,13 @@ public class ClientManager extends
         log.info("Starting Clients....");
 
         // start the threads
-        for (Thread thread : clientThreads) {
+        for (ClientThread thread : clientThreads) {
+            log.info("TRY TO START");
             thread.start();
         }
 
         // join the threads
-        for (Thread thread : clientThreads) {
+        for (ClientThread thread : clientThreads) {
             try {
                 thread.join();
             } catch (InterruptedException e) {

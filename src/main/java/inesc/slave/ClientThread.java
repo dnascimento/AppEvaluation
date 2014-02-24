@@ -7,12 +7,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 /**
  * A thread that performs a GET.
  */
 class ClientThread extends
         Thread {
+    private static Logger log = Logger.getLogger(ClientThread.class);
 
     private final CloseableHttpClient httpClient;
     private final HttpContext context;
@@ -39,6 +41,7 @@ class ClientThread extends
     @Override
     public void run() {
         StringBuilder report = new StringBuilder();
+        log.info("client start");
         report.append("Client: " + id + "\n");
         for (int i = 0; i < history.length; i++) {
             HttpRequestBase req = history[i];
@@ -72,8 +75,8 @@ class ClientThread extends
             }
             report.append("\n");
         }
-        System.out.println("Done");
-        System.out.println(report.toString());
+        log.info("Done");
+        log.info(report.toString());
         // Free Memory
         history = null;
         historyCounter = null;

@@ -26,7 +26,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
-@Path("/resources")
+@Path("/requests")
 public class RequestsService {
     private static Logger log = Logger.getLogger(RequestsService.class);
     ClientManager clientManager;
@@ -37,10 +37,7 @@ public class RequestsService {
     }
 
 
-
-
     @GET
-    @Path("/start")
     @Produces("application/x-protobuf")
     public AppEvaluationProtos.AppResponse start() {
         // Async start the clients
@@ -49,29 +46,27 @@ public class RequestsService {
     }
 
     @POST
-    @Path("/requests")
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public AppResponse reflect(AppEvaluationProtos.AppReqList reqList) {
         int nRequests = reqList.getRequestsCount();
         int nClients = reqList.getNClients();
         System.out.println("Got " + nRequests + " requests for " + nClients + " clients");
-        return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
 
-        // HttpRequestBase[] history = new HttpRequestBase[nRequests];
-        // int[] historyCounter = new int[nRequests];
-        // int i = 0;
-        // for (AppRequest req : reqList.getRequestsList()) {
-        // try {
-        // history[i] = convertReqBufferToHTTPRequest(req);
-        // historyCounter[i] = req.getNExec();
-        // i++;
-        // } catch (UnsupportedEncodingException e) {
-        // log.error("Unsupported Encoding");
-        // }
-        // }
-        // clientManager.newClient(history, historyCounter);
-        // return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
+        HttpRequestBase[] history = new HttpRequestBase[nRequests];
+        int[] historyCounter = new int[nRequests];
+        int i = 0;
+        for (AppRequest req : reqList.getRequestsList()) {
+            try {
+                history[i] = convertReqBufferToHTTPRequest(req);
+                historyCounter[i] = req.getNExec();
+                i++;
+            } catch (UnsupportedEncodingException e) {
+                log.error("Unsupported Encoding");
+            }
+        }
+        clientManager.newClient(history, historyCounter);
+        return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
 
     /**

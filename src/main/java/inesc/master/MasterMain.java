@@ -8,6 +8,7 @@ import inesc.slave.SlaveMain;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 
 
@@ -20,6 +21,7 @@ public class MasterMain {
     private static Logger log = Logger.getLogger(RequestsService.class);
 
     public static void main(String[] args) {
+        PropertyConfigurator.configure("log4j.properties");
 
         URI url = SlaveMain.BASE_URI;
         Master puppetMaster = new Master(url);

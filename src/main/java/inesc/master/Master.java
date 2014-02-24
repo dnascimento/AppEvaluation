@@ -28,6 +28,8 @@ public class Master {
     private final WebResource r;
     private static Logger log = Logger.getLogger(Master.class);
 
+
+
     public Master(URI url) {
         ClientConfig cc = new DefaultClientConfig();
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
@@ -44,7 +46,7 @@ public class Master {
     }
 
     public void start() {
-        WebResource wr = r.path("start");
+        WebResource wr = r.path("requests");
         AppResponse res = wr.get(AppResponse.class);
         if (res.getStatus().equals(AppResponse.ResStatus.OK)) {
             log.info("Master: Process Start");

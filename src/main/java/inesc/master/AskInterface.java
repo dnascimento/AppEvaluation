@@ -10,7 +10,9 @@ import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
  * 
  * @author darionascimento
  */
-public class AskInterface {
+public class AskInterface extends
+        Thread {
+
 
     public static AppRequest getHomepage() {
         return AppRequest.newBuilder()

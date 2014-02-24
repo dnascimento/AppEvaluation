@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
@@ -18,6 +20,8 @@ public class SlaveMain {
 
 
     public static void main(String[] args) throws IOException {
+        PropertyConfigurator.configure("log4j.properties");
+
         System.out.println("Starting grizzly....");
         URI uri = BASE_URI;
         SelectorThread threadSelector = createServer(uri);
