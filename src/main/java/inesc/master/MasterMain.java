@@ -1,10 +1,14 @@
 package inesc.master;
 
-import inesc.shared.AppEvaluationProtos.AppReqList;
-import inesc.shared.AppEvaluationProtos.AppRequest;
+
+import inesc.slave.AppEvaluationProtos.AppReqList;
+import inesc.slave.AppEvaluationProtos.AppRequest;
+import inesc.slave.RequestsService;
 import inesc.slave.SlaveMain;
 
 import java.net.URI;
+
+import org.apache.log4j.Logger;
 
 /**
  * Create execution stories and send the stories for invocation
@@ -12,7 +16,10 @@ import java.net.URI;
  * @author darionascimento
  */
 public class MasterMain {
+    private static Logger log = Logger.getLogger(RequestsService.class);
+
     public static void main(String[] args) {
+
         URI url = SlaveMain.BASE_URI;
         Master puppetMaster = new Master(url);
 
@@ -22,5 +29,7 @@ public class MasterMain {
 
         // Send the request list using puppet
         puppetMaster.sendRequest(list);
+        // Start Execution
+        puppetMaster.start();
     }
 }

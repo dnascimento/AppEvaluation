@@ -1,4 +1,4 @@
-package inesc.slave.serverAPI;
+package inesc.slave;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -9,7 +9,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 
-public class ClientManager {
+public class ClientManager extends
+        Thread {
     private static Logger log = Logger.getLogger(ClientManager.class);
 
     /* Max number of concurrent threads */
@@ -22,10 +23,10 @@ public class ClientManager {
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
 
-    private CloseableHttpClient httpClient;
+    private final CloseableHttpClient httpClient;
     private int id = 0;
 
-    public void ClientManager() {
+    public ClientManager() {
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(MAX_CONNECTIONS_TOTAL);
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
@@ -42,6 +43,7 @@ public class ClientManager {
     /**
      * Start all clients at same time
      */
+    @Override
     public void start() {
         log.info("Starting Clients....");
 
@@ -64,6 +66,7 @@ public class ClientManager {
             log.error("Error closing HTTP Client" + e);
         }
         log.info("Clients done...");
+        // TODO Notificar o servidor com os resultados
     }
 
 

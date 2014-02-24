@@ -25,7 +25,7 @@ message AppRequest {
 
 message AppReqList {
   repeated AppRequest requests = 1;
-  required numberOfClients = 2;
+  required int32 nClients = 2;
 }
 
 message AppResponse{

@@ -1,11 +1,12 @@
 package inesc;
 
-import inesc.shared.AppEvaluationProtos.AppReqList;
-import inesc.shared.AppEvaluationProtos.AppRequest;
-import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
-import inesc.shared.AppEvaluationProtos.AppResponse;
+
+import inesc.slave.AppEvaluationProtos.AppReqList;
+import inesc.slave.AppEvaluationProtos.AppRequest;
+import inesc.slave.AppEvaluationProtos.AppRequest.ReqType;
+import inesc.slave.AppEvaluationProtos.AppResponse;
+import inesc.slave.ProtobufProviders;
 import inesc.slave.SlaveMain;
-import inesc.slave.serverAPI.ProtobufProviders;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +59,10 @@ public class MainTest extends
                                    .setNExec(1)
                                    .setUrl("http://google.pt")
                                    .build();
-        AppReqList reqList = AppReqList.newBuilder().addRequests(req).build();
+        AppReqList reqList = AppReqList.newBuilder()
+                                       .addRequests(req)
+                                       .setNClients(1)
+                                       .build();
         AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
                                                                  reqList);
         assertEquals(AppResponse.ResStatus.OK, res.getStatus());
