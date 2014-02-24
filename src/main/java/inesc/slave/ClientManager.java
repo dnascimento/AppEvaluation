@@ -22,11 +22,15 @@ public class ClientManager extends
     public static final int DELAY_BETWEEN_REQUESTS = 10;
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
-
-    private final CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient;
     private int id = 0;
 
     public ClientManager() {
+        restart();
+    }
+
+    public void restart() {
+        clientThreads.clear();
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(MAX_CONNECTIONS_TOTAL);
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
@@ -65,6 +69,8 @@ public class ClientManager extends
         } catch (IOException e) {
             log.error("Error closing HTTP Client" + e);
         }
+        // Clean the threads and connections
+        this.restart();
         log.info("Clients done...");
         // TODO Notificar o servidor com os resultados
     }
