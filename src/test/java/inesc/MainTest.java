@@ -1,10 +1,10 @@
 package inesc;
 
+import inesc.share.ProtobufProviders;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
 import inesc.shared.AppEvaluationProtos.AppResponse;
-import inesc.slave.ProtobufProviders;
 import inesc.slave.SlaveMain;
 
 import java.util.HashMap;
@@ -36,7 +36,8 @@ public class MainTest extends
         super.setUp();
         DOMConfigurator.configure("log4j.xml");
         Map<String, String> initParams = new HashMap<String, String>();
-        initParams.put("com.sun.jersey.config.property.packages", "inesc.slave");
+        initParams.put("com.sun.jersey.config.property.packages",
+                       "inesc.slave; inesc.share");
         threadSelector = GrizzlyWebContainerFactory.create(UriBuilder.fromUri("http://localhost/")
                                                                      .port(9998)
                                                                      .build(),
@@ -47,7 +48,7 @@ public class MainTest extends
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
         Client c = Client.create(cc);
-        r = c.resource(SlaveMain.BASE_URI);
+        r = c.resource(SlaveMain.SLAVE_URI);
     }
 
     @Override
@@ -62,49 +63,21 @@ public class MainTest extends
         // AppResponse p = wr.get(AppResponse.class);
         AppRequest req = AppRequest.newBuilder()
                                    .setType(ReqType.GET)
-                                   .setNExec(12)
+                                   .setNExec(50)
                                    .setUrl("http://google.pt")
                                    .build();
         AppReqList reqList = AppReqList.newBuilder()
                                        .addRequests(req)
                                        .setNClients(1)
                                        .build();
-        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
-                                                                 reqList);
-        assertEquals(AppResponse.ResStatus.OK, res.getStatus());
+        wr.type("application/x-protobuf").post(reqList);
+        // assertEquals(AppResponse.ResStatus.OK, res.getStatus());
 
         // Start Requests
         wr = r.path("requests");
-        res = wr.get(AppResponse.class);
+        AppResponse res = wr.get(AppResponse.class);
         assertEquals(AppResponse.ResStatus.OK, res.getStatus());
 
     }
 
-    // public void testUsingURLConnection() throws IOException {
-    // AddressBookProtos.Person person;
-    // {
-    // URL url = new URL("http://localhost:9998/person");
-    // URLConnection urlc = url.openConnection();
-    // urlc.setDoInput(true);
-    // urlc.setRequestProperty("Accept", "application/x-protobuf");
-    // person = AddressBookProtos.Person.newBuilder()
-    // .mergeFrom(urlc.getInputStream())
-    // .build();
-    // assertEquals("Sam", person.getName());
-    // }
-    // {
-    // URL url = new URL("http://localhost:9998/person");
-    // HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
-    // urlc.setDoInput(true);
-    // urlc.setDoOutput(true);
-    // urlc.setRequestMethod("POST");
-    // urlc.setRequestProperty("Accept", "application/x-protobuf");
-    // urlc.setRequestProperty("Content-Type", "application/x-protobuf");
-    // person.writeTo(urlc.getOutputStream());
-    // AddressBookProtos.Person person2 = AddressBookProtos.Person.newBuilder()
-    // .mergeFrom(urlc.getInputStream())
-    // .build();
-    // assertEquals(person, person2);
-    // }
-    // }
 }

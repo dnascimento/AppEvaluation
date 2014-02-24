@@ -1,4 +1,4 @@
-package inesc.slave;
+package inesc.share;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -47,7 +47,7 @@ class ClientThread extends
 
         context = new BasicHttpContext();
         report = new ThreadReport();
-        int totalRequests = report.preExecution(historyCounter);
+        int totalRequests = report.preExecution(historyCounter, clientID);
         executionTimes = new short[totalRequests];
         dataReceived = 0;
     }
@@ -59,9 +59,7 @@ class ClientThread extends
      */
     @Override
     public void run() {
-        StringBuilder reportSB = new StringBuilder();
         log.info("Client" + clientID + "starting...");
-        reportSB.append("Client: " + clientID + "\n");
         long startExecution = System.currentTimeMillis();
         int requestID = 0;
         long start;
@@ -70,48 +68,34 @@ class ClientThread extends
         for (int i = 0; i < history.length; i++) {
             HttpRequestBase req = history[i];
 
-            reportSB.append(req.getMethod());
-            reportSB.append("-");
-            reportSB.append(req.getURI());
-
             while (historyCounter[i]-- > 0) {
                 CloseableHttpResponse response;
                 try {
                     start = System.currentTimeMillis();
                     response = httpClient.execute(req, context);
                     duration = (System.currentTimeMillis() - start);
-
                     executionTimes[requestID] = (short) duration;
-                    reportSB.append(" - ");
-                    reportSB.append(duration);
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         byte[] bytes = EntityUtils.toByteArray(entity);
-                        reportSB.append(" : ");
-                        reportSB.append(bytes.length);
                         dataReceived += bytes.length;
                     }
-                    reportSB.append("/");
                 } catch (NoHttpResponseException e) {
                     // Server received the request but due to overload do not reply
-                    reportSB.append(e);
                     log.warn("No HTTP Response");
                     executionTimes[requestID] = -1;
 
                 } catch (ConnectionPoolTimeoutException e) {
                     // multithreaded connection manager fails to obtain a free connection
-                    reportSB.append(e);
                     log.warn("Connection Pool Timeout Exception");
                     executionTimes[requestID] = -2;
 
                 } catch (ConnectTimeoutException e) {
                     // unable to establish a connection
-                    reportSB.append(e);
                     log.warn("Connect Timeout Exception");
                     executionTimes[requestID] = -3;
 
                 } catch (Exception e) {
-                    reportSB.append(e);
                     log.warn(e);
                     executionTimes[requestID] = -4;
                 }
@@ -122,20 +106,18 @@ class ClientThread extends
                 } catch (InterruptedException e) {
                     log.error(e);
                 }
+                requestID++;
             }
-            reportSB.append("\n");
         }
         long totalExecutionTime = System.currentTimeMillis() - startExecution;
-        String reportString = reportSB.toString();
+        String reportString = "";
         report.afterExecution(executionTimes,
                               totalExecutionTime,
                               reportString,
                               dataReceived);
         clientManager.addReport(clientID, report);
-        log.info(reportString);
         // Free Memory
         history = null;
         historyCounter = null;
     }
-
 }

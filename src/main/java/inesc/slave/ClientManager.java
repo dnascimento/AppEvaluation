@@ -1,10 +1,14 @@
 package inesc.slave;
 
 
+import inesc.share.ProtobufProviders;
+import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
+import inesc.shared.AppEvaluationProtos.SlaveRegistryMsg;
 import inesc.slave.reports.ThreadReport;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.URI;
 import java.util.LinkedList;
 
 import org.apache.http.client.config.RequestConfig;
@@ -13,6 +17,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class ClientManager extends
         Thread {
@@ -25,23 +34,31 @@ public class ClientManager extends
     /* Max number of concurrent threads */
     public static final int MAX_CONNECTIONS_TOTAL = 200;
     /* Max number of concurrent threads using same route */
-    public static final int MAX_CONNECTIONS_PER_ROUTE = 20;
+    public static final int MAX_CONNECTIONS_PER_ROUTE = 200;
 
     /* milisecounds delay */
     public static final int DELAY_BETWEEN_REQUESTS = 10;
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
-    private final HashMap<Integer, ThreadReport> clientReports = new HashMap<Integer, ThreadReport>();
+    private ThreadReport[] clientReports;
     private CloseableHttpClient httpClient;
-    private int id = 0;
+    private int id;
+    private final WebResource r;
 
-    public ClientManager() {
+
+    public ClientManager(URI masterURI) {
+        ClientConfig cc = new DefaultClientConfig();
+        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
+        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
+        Client c = Client.create(cc);
+        r = c.resource(masterURI);
+
         restart();
     }
 
     public void restart() {
         clientThreads.clear();
-        clientReports.clear();
+        clientReports = null;
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(MAX_CONNECTIONS_TOTAL);
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
@@ -57,6 +74,7 @@ public class ClientManager extends
                                 .setConnectionManager(cm)
                                 .setDefaultRequestConfig(defaultRequestConfig)
                                 .build();
+        id = 0;
     }
 
     public void newClient(HttpRequestBase[] history, short[] historyCounter) {
@@ -71,6 +89,7 @@ public class ClientManager extends
      */
     @Override
     public void start() {
+        clientReports = new ThreadReport[id];
         log.info("Starting " + clientThreads.size() + "Clients....");
 
         // start the threads
@@ -86,28 +105,52 @@ public class ClientManager extends
                 log.error("Interrupted Execution" + e);
             }
         }
+
         try {
             httpClient.close();
         } catch (IOException e) {
             log.error("Error closing HTTP Client" + e);
         }
-        // HttpConnectionMetrics metris =
         log.info("Clients done...");
         showReports();
-        // TODO Notificar o servidor com os resultados
+        sendReportToMaster();
         // Clean the threads and connections
         this.restart();
 
     }
 
-    private void showReports() {
-        for (ThreadReport report : clientReports.values()) {
-            log.info(report);
+    private void sendReportToMaster() {
+        ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
+        for (int i = 0; i < clientReports.length; i++) {
+            bd.addReports(clientReports[i].toProtBuffer());
         }
 
+        WebResource wr = r.path("master");
+        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
+                                                                 bd.build());
+        log.info(res);
     }
 
+    private void showReports() {
+        for (int i = 0; i < clientReports.length; i++) {
+            log.info(clientReports[i]);
+        }
+    }
+
+
+
     public synchronized void addReport(int clientId, ThreadReport report) {
-        clientReports.put(clientId, report);
+        clientReports[clientId] = report;
+    }
+
+    public void register(String url, int port) {
+        WebResource wr = r.path("master/registry");
+        SlaveRegistryMsg msg = SlaveRegistryMsg.newBuilder()
+                                               .setPort(port)
+                                               .setUrl(url)
+                                               .build();
+
+        wr.type("application/x-protobuf").post(msg);
+        log.info("Client Registerd");
     }
 }

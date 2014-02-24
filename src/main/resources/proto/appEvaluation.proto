@@ -36,3 +36,29 @@ message AppResponse{
 	}
 	optional ResStatus status = 2;
 }
+
+message ThreadReportMsg{
+	optional int32 nTransactions = 1;
+	optional int32 successTransactions = 2;
+	optional int32 averageResponseTime = 3;
+	optional double transactionRate = 4;
+	optional int32 longest = 5;
+	optional int32 shortest = 6;
+	optional int32 totalTransferingTime = 7;
+	optional int32 failTransactions = 8;
+	optional string report = 9;
+	optional int64 totalExecutionTime = 10;
+	optional int64 dataReceived = 11;
+	optional int32 clientID = 12;
+}
+
+
+message ReportAgregatedMsg{
+	repeated ThreadReportMsg reports = 1;
+}
+
+
+message SlaveRegistryMsg{
+	required string url = 1;
+	required int32 port = 2;
+}

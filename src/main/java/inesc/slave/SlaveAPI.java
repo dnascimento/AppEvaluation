@@ -1,5 +1,6 @@
 package inesc.slave;
 
+import inesc.master.MasterMain;
 import inesc.shared.AppEvaluationProtos;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppResponse;
@@ -27,9 +28,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 @Path("/requests")
-public class RequestsService {
-    private static Logger log = Logger.getLogger(RequestsService.class);
-    static ClientManager clientManager = new ClientManager();
+public class SlaveAPI {
+    private static Logger log = Logger.getLogger(SlaveAPI.class);
+    public static ClientManager clientManager = new ClientManager(MasterMain.MASTER_URI);
 
 
     @GET
@@ -42,8 +43,7 @@ public class RequestsService {
 
     @POST
     @Consumes("application/x-protobuf")
-    @Produces("application/x-protobuf")
-    public AppResponse reflect(AppEvaluationProtos.AppReqList reqList) {
+    public void receiveRequestList(AppEvaluationProtos.AppReqList reqList) {
         int nRequests = reqList.getRequestsCount();
         int nClients = reqList.getNClients();
         System.out.println("Got " + nRequests + " requests for " + nClients + " clients");
@@ -60,8 +60,9 @@ public class RequestsService {
                 log.error("Unsupported Encoding");
             }
         }
-        clientManager.newClient(history, historyCounter);
-        return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
+        for (i = 0; i < nClients; i++) {
+            clientManager.newClient(history, historyCounter);
+        }
     }
 
     /**
@@ -121,6 +122,12 @@ public class RequestsService {
             return params;
         }
     }
+
+
+
+
+
+
 
 
 

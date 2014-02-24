@@ -14,11 +14,13 @@ public class AskInterface extends
         Thread {
 
 
-    public static AppRequest getHomepage() {
+    public static AppRequest getHomepage(int nExec) {
         return AppRequest.newBuilder()
                          .setType(ReqType.GET)
-                         .setNExec(1)
+                         .setNExec(nExec)
                          .setUrl("http://google.pt")
                          .build();
     }
+
+
 }
