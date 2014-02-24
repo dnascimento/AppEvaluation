@@ -41,19 +41,21 @@ class ClientThread extends
     @Override
     public void run() {
         StringBuilder report = new StringBuilder();
-        log.info("client start");
+        log.info("Client" + id + "starting...");
         report.append("Client: " + id + "\n");
+
         for (int i = 0; i < history.length; i++) {
             HttpRequestBase req = history[i];
 
             report.append(req.getMethod());
+            report.append("-");
             report.append(req.getURI());
 
             while (historyCounter[i]-- > 0) {
                 try {
-                    long start = System.nanoTime();
+                    long start = System.currentTimeMillis();
                     CloseableHttpResponse response = httpClient.execute(req, context);
-                    long duration = (System.nanoTime() - start) / 1000000;
+                    long duration = (System.currentTimeMillis() - start);
                     try {
                         report.append(" - ");
                         report.append(duration);
@@ -75,7 +77,6 @@ class ClientThread extends
             }
             report.append("\n");
         }
-        log.info("Done");
         log.info(report.toString());
         // Free Memory
         history = null;

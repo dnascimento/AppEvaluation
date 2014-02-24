@@ -29,12 +29,7 @@ import org.apache.log4j.Logger;
 @Path("/requests")
 public class RequestsService {
     private static Logger log = Logger.getLogger(RequestsService.class);
-    ClientManager clientManager;
-
-    // /////////// SERVER ///////////////////
-    public RequestsService() {
-        clientManager = new ClientManager();
-    }
+    static ClientManager clientManager = new ClientManager();
 
 
     @GET

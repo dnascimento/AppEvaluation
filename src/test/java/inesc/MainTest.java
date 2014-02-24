@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import junit.framework.TestCase;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.xml.DOMConfigurator;
 
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.client.Client;
@@ -34,7 +34,7 @@ public class MainTest extends
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        PropertyConfigurator.configure("log4j.properties");
+        DOMConfigurator.configure("log4j.xml");
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put("com.sun.jersey.config.property.packages", "inesc.slave");
         threadSelector = GrizzlyWebContainerFactory.create(UriBuilder.fromUri("http://localhost/")
@@ -61,8 +61,8 @@ public class MainTest extends
 
         // AppResponse p = wr.get(AppResponse.class);
         AppRequest req = AppRequest.newBuilder()
-                                   .setType(ReqType.POST)
-                                   .setNExec(1)
+                                   .setType(ReqType.GET)
+                                   .setNExec(12)
                                    .setUrl("http://google.pt")
                                    .build();
         AppReqList reqList = AppReqList.newBuilder()

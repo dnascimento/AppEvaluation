@@ -9,6 +9,7 @@ import java.net.URI;
 import org.apache.log4j.Logger;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -39,10 +40,15 @@ public class Master {
     }
 
     public void sendRequest(AppReqList requestList) {
-        WebResource wr = r.path("requests");
-        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
-                                                                 requestList);
-        System.out.println(res);
+        WebResource wr = null;
+        try {
+            wr = r.path("requests");
+            AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
+                                                                     requestList);
+            System.out.println(res);
+        } catch (ClientHandlerException e) {
+            log.error("Connection refused " + wr.getURI());
+        }
     }
 
     public void start() {

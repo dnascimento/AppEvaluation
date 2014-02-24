@@ -19,7 +19,7 @@ public class ClientManager extends
     public static final int MAX_CONNECTIONS_PER_ROUTE = 20;
 
     /* milisecounds delay */
-    public static final int DELAY_BETWEEN_REQUESTS = 100;
+    public static final int DELAY_BETWEEN_REQUESTS = 10;
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
 
@@ -45,11 +45,10 @@ public class ClientManager extends
      */
     @Override
     public void start() {
-        log.info("Starting Clients....");
+        log.info("Starting Clients...." + clientThreads.size());
 
         // start the threads
         for (ClientThread thread : clientThreads) {
-            log.info("TRY TO START");
             thread.start();
         }
 
