@@ -1,10 +1,9 @@
 package inesc;
 
-
-import inesc.slave.AppEvaluationProtos.AppReqList;
-import inesc.slave.AppEvaluationProtos.AppRequest;
-import inesc.slave.AppEvaluationProtos.AppRequest.ReqType;
-import inesc.slave.AppEvaluationProtos.AppResponse;
+import inesc.shared.AppEvaluationProtos.AppReqList;
+import inesc.shared.AppEvaluationProtos.AppRequest;
+import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
+import inesc.shared.AppEvaluationProtos.AppResponse;
 import inesc.slave.ProtobufProviders;
 import inesc.slave.SlaveMain;
 
@@ -21,6 +20,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
+
+
 
 public class MainTest extends
         TestCase {

@@ -1,14 +1,15 @@
 package inesc.master;
 
-
-import inesc.slave.AppEvaluationProtos.AppReqList;
-import inesc.slave.AppEvaluationProtos.AppRequest;
+import inesc.shared.AppEvaluationProtos.AppReqList;
+import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.slave.RequestsService;
 import inesc.slave.SlaveMain;
 
 import java.net.URI;
 
 import org.apache.log4j.Logger;
+
+
 
 /**
  * Create execution stories and send the stories for invocation

@@ -2,6 +2,7 @@ package inesc.master;
 
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.slave.ProtobufProviders;
 
 import java.net.URI;
 
