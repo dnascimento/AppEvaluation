@@ -12,6 +12,7 @@ Just a 2 days project to evaluate my thesis work
 * WebContainer:  [Grizzly](https://grizzly.java.net/)
 * JAX-RS: [Jersey](https://jersey.java.net/) 
 * Binary Communication Protocol [Google Protocol Buffers](https://developers.google.com/protocol-buffers/)
+* Maven
 
 **Characteristics:**
 -----------------------------
