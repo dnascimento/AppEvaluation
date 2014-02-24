@@ -49,12 +49,12 @@ public class RequestsService {
         System.out.println("Got " + nRequests + " requests for " + nClients + " clients");
 
         HttpRequestBase[] history = new HttpRequestBase[nRequests];
-        int[] historyCounter = new int[nRequests];
+        short[] historyCounter = new short[nRequests];
         int i = 0;
         for (AppRequest req : reqList.getRequestsList()) {
             try {
                 history[i] = convertReqBufferToHTTPRequest(req);
-                historyCounter[i] = req.getNExec();
+                historyCounter[i] = (short) req.getNExec();
                 i++;
             } catch (UnsupportedEncodingException e) {
                 log.error("Unsupported Encoding");

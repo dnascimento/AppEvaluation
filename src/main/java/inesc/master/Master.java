@@ -53,12 +53,15 @@ public class Master {
 
     public void start() {
         WebResource wr = r.path("requests");
-        AppResponse res = wr.get(AppResponse.class);
-        if (res.getStatus().equals(AppResponse.ResStatus.OK)) {
-            log.info("Master: Process Start");
-        } else {
-            log.error("Master: Error to start process");
+        try {
+            AppResponse res = wr.get(AppResponse.class);
+            if (res.getStatus().equals(AppResponse.ResStatus.OK)) {
+                log.info("Master: Process Start");
+            } else {
+                log.error("Master: Error to start process");
+            }
+        } catch (ClientHandlerException e) {
+            log.error("Connection refused " + wr.getURI());
         }
-
     }
 }

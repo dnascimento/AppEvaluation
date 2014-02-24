@@ -1,8 +1,13 @@
 package inesc.slave;
 
+import inesc.slave.reports.ThreadReport;
+
 import org.apache.http.HttpEntity;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
@@ -18,19 +23,33 @@ class ClientThread extends
 
     private final CloseableHttpClient httpClient;
     private final HttpContext context;
-    private final int id;
+    private final int clientID;
     private HttpRequestBase[] history;
-    private int[] historyCounter;
+    private short[] historyCounter;
+    private final short[] executionTimes;
+    public ThreadReport report;
+    private final ClientManager clientManager;
+    private long dataReceived;
+
 
     public ClientThread(CloseableHttpClient httpClient,
             HttpRequestBase[] history,
-            int[] historyCounter,
-            int id) {
+            short[] historyCounter,
+            int clientID,
+            ClientManager clientManager) {
         this.httpClient = httpClient;
-        context = new BasicHttpContext();
+        this.clientManager = clientManager;
         this.history = history;
         this.historyCounter = historyCounter;
-        this.id = id;
+        this.clientID = clientID;
+
+
+
+        context = new BasicHttpContext();
+        report = new ThreadReport();
+        int totalRequests = report.preExecution(historyCounter);
+        executionTimes = new short[totalRequests];
+        dataReceived = 0;
     }
 
 
@@ -40,46 +59,83 @@ class ClientThread extends
      */
     @Override
     public void run() {
-        StringBuilder report = new StringBuilder();
-        log.info("Client" + id + "starting...");
-        report.append("Client: " + id + "\n");
+        StringBuilder reportSB = new StringBuilder();
+        log.info("Client" + clientID + "starting...");
+        reportSB.append("Client: " + clientID + "\n");
+        long startExecution = System.currentTimeMillis();
+        int requestID = 0;
+        long start;
+        long duration;
 
         for (int i = 0; i < history.length; i++) {
             HttpRequestBase req = history[i];
 
-            report.append(req.getMethod());
-            report.append("-");
-            report.append(req.getURI());
+            reportSB.append(req.getMethod());
+            reportSB.append("-");
+            reportSB.append(req.getURI());
 
             while (historyCounter[i]-- > 0) {
+                CloseableHttpResponse response;
                 try {
-                    long start = System.currentTimeMillis();
-                    CloseableHttpResponse response = httpClient.execute(req, context);
-                    long duration = (System.currentTimeMillis() - start);
-                    try {
-                        report.append(" - ");
-                        report.append(duration);
-                        HttpEntity entity = response.getEntity();
-                        if (entity != null) {
-                            byte[] bytes = EntityUtils.toByteArray(entity);
-                            report.append(" : ");
-                            report.append(bytes.length);
-                        }
-                    } finally {
-                        response.close();
+                    start = System.currentTimeMillis();
+                    response = httpClient.execute(req, context);
+                    duration = (System.currentTimeMillis() - start);
+
+                    executionTimes[requestID] = (short) duration;
+                    reportSB.append(" - ");
+                    reportSB.append(duration);
+                    HttpEntity entity = response.getEntity();
+                    if (entity != null) {
+                        byte[] bytes = EntityUtils.toByteArray(entity);
+                        reportSB.append(" : ");
+                        reportSB.append(bytes.length);
+                        dataReceived += bytes.length;
                     }
-                    report.append("/");
-                    // Delay the next request
-                    sleep(ClientManager.DELAY_BETWEEN_REQUESTS);
+                    reportSB.append("/");
+                } catch (NoHttpResponseException e) {
+                    // Server received the request but due to overload do not reply
+                    reportSB.append(e);
+                    log.warn("No HTTP Response");
+                    executionTimes[requestID] = -1;
+
+                } catch (ConnectionPoolTimeoutException e) {
+                    // multithreaded connection manager fails to obtain a free connection
+                    reportSB.append(e);
+                    log.warn("Connection Pool Timeout Exception");
+                    executionTimes[requestID] = -2;
+
+                } catch (ConnectTimeoutException e) {
+                    // unable to establish a connection
+                    reportSB.append(e);
+                    log.warn("Connect Timeout Exception");
+                    executionTimes[requestID] = -3;
+
                 } catch (Exception e) {
-                    report.append(e);
+                    reportSB.append(e);
+                    log.warn(e);
+                    executionTimes[requestID] = -4;
+                }
+
+                // Delay the next request
+                try {
+                    sleep(ClientManager.DELAY_BETWEEN_REQUESTS);
+                } catch (InterruptedException e) {
+                    log.error(e);
                 }
             }
-            report.append("\n");
+            reportSB.append("\n");
         }
-        log.info(report.toString());
+        long totalExecutionTime = System.currentTimeMillis() - startExecution;
+        String reportString = reportSB.toString();
+        report.afterExecution(executionTimes,
+                              totalExecutionTime,
+                              reportString,
+                              dataReceived);
+        clientManager.addReport(clientID, report);
+        log.info(reportString);
         // Free Memory
         history = null;
         historyCounter = null;
     }
+
 }
