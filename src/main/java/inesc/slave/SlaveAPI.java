@@ -1,6 +1,5 @@
 package inesc.slave;
 
-import inesc.master.server.MasterMain;
 import inesc.shared.AppEvaluationProtos;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppResponse;
@@ -35,7 +34,6 @@ import org.apache.log4j.Logger;
 @Path("/")
 public class SlaveAPI {
     private static Logger log = Logger.getLogger(SlaveAPI.class);
-    public static ClientManager clientManager = new ClientManager(MasterMain.MASTER_URI);
 
     /**
      * Order the begin of execution
@@ -47,7 +45,7 @@ public class SlaveAPI {
     @Produces("application/x-protobuf")
     public AppEvaluationProtos.AppResponse start() {
         // Async start the clients
-        clientManager.start();
+        SlaveMain.clientManager.start();
         return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
 
@@ -77,7 +75,7 @@ public class SlaveAPI {
             }
         }
         for (i = 0; i < nClients; i++) {
-            clientManager.newClient(history, historyCounter);
+            SlaveMain.clientManager.newClient(history, historyCounter);
         }
     }
 

@@ -18,7 +18,7 @@ public class AskInterface extends
         return AppRequest.newBuilder()
                          .setType(ReqType.GET)
                          .setNExec(nExec)
-                         .setUrl("http://google.pt")
+                         .setUrl("http://localhost:8888/")
                          .build();
     }
 

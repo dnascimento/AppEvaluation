@@ -29,7 +29,7 @@ public class MasterMain {
                                                    .build();
 
     // how many slaves should registry before start actions
-    public static final int EXPECTED_SLAVES = 3;
+    public static final int EXPECTED_SLAVES = 1;
     public static Master puppetMaster;
 
     public static void main(String[] args) throws IOException {

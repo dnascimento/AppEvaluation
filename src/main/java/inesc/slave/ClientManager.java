@@ -64,6 +64,10 @@ public class ClientManager extends
     public void restart() {
         clientThreads.clear();
         clientReports = null;
+        /*
+         * Perform explicit garbage collection to remove old client threads and reports.
+         * System.gc();
+         */
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(MAX_CONNECTIONS_TOTAL);
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);

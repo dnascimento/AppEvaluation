@@ -24,8 +24,8 @@ public class AskRequestHistory extends
             e.printStackTrace();
         }
         // Create the request list from AskInterface
-        AppRequest req = AskInterface.getHomepage(20);
-        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(3).build();
+        AppRequest req = AskInterface.getHomepage(40);
+        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(2).build();
 
         // Send the request list using puppet
         MasterMain.puppetMaster.sendRequest(list);

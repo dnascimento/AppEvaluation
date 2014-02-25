@@ -1,5 +1,7 @@
 package inesc.slave;
 
+import inesc.master.server.MasterMain;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
@@ -20,6 +22,7 @@ public class SlaveMain {
     private static Logger log = Logger.getLogger(SlaveMain.class);
     private final static int PORT_RANGE_MIN = 9000;
     private final static int PORT_RANGE_MAX = 9200;
+    public static ClientManager clientManager;
 
 
     public static void main(String[] args) throws IOException {
@@ -29,12 +32,15 @@ public class SlaveMain {
         String path = "http://localhost/";
         SLAVE_URI = UriBuilder.fromUri(path).port(port).build();
 
+        clientManager = new ClientManager(MasterMain.MASTER_URI);
+
+
         log.info("Starting slave....");
         SelectorThread threadSelector = createServer(SLAVE_URI);
         log.info("Client at " + SLAVE_URI);
 
         // Register the slave on master
-        SlaveAPI.clientManager.register(path, port);
+        clientManager.register(path, port);
 
         log.info("Hit enter to stop it...");
         System.in.read();
