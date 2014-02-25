@@ -23,6 +23,11 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
+/**
+ * Manages the set of ClientThreads. Each thread represents a distinct parallel client
+ * 
+ * @author darionascimento
+ */
 public class ClientManager extends
         Thread {
     private static Logger log = Logger.getLogger(ClientManager.class);
@@ -88,7 +93,7 @@ public class ClientManager extends
      * Start all clients at same time
      */
     @Override
-    public void start() {
+    public void run() {
         clientReports = new ThreadReport[id];
         log.info("Starting " + clientThreads.size() + "Clients....");
 

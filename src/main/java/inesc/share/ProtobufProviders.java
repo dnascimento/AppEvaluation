@@ -22,7 +22,11 @@ import javax.ws.rs.ext.Provider;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 
-
+/**
+ * Grizzly provider for Protobuf
+ * 
+ * @author darionascimento
+ */
 public class ProtobufProviders {
     @Provider
     @Consumes("application/x-protobuf")

@@ -16,9 +16,7 @@ import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
 public class SlaveMain {
-    public static URI SLAVE_URI = UriBuilder.fromUri("http://localhost/")
-                                            .port(9998)
-                                            .build();
+    public static URI SLAVE_URI;
     private static Logger log = Logger.getLogger(SlaveMain.class);
     private final static int PORT_RANGE_MIN = 9000;
     private final static int PORT_RANGE_MAX = 9200;
@@ -27,15 +25,15 @@ public class SlaveMain {
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
 
-        int port = 9998;// getFreePort();
+        int port = getFreePort();
         String path = "http://localhost/";
-        // SLAVE_URI =
+        SLAVE_URI = UriBuilder.fromUri(path).port(port).build();
 
         log.info("Starting slave....");
         SelectorThread threadSelector = createServer(SLAVE_URI);
         log.info("Client at " + SLAVE_URI);
 
-
+        // Register the slave on master
         SlaveAPI.clientManager.register(path, port);
 
         log.info("Hit enter to stop it...");
@@ -44,7 +42,13 @@ public class SlaveMain {
     }
 
 
-
+    /**
+     * Start Grizzly server
+     * 
+     * @param uri
+     * @return
+     * @throws IOException
+     */
     public static SelectorThread createServer(URI uri) throws IOException {
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put("com.sun.jersey.config.property.packages",
@@ -52,6 +56,11 @@ public class SlaveMain {
         return GrizzlyWebContainerFactory.create(uri, initParams);
     }
 
+    /**
+     * Select a random free port on given range
+     * 
+     * @return the port
+     */
     public static int getFreePort() {
         // Pick Port
         Random rand = new Random();

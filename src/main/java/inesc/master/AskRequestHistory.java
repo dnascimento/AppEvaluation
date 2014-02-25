@@ -1,9 +1,15 @@
 package inesc.master;
 
+import inesc.master.server.MasterMain;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 
-// Execute requests on server
+/**
+ * Perform requests on server using the Master client and AskInterface
+ * This is the defacto class here the users can change which actions are executed.
+ * 
+ * @author darionascimento
+ */
 public class AskRequestHistory extends
         Thread {
 
@@ -12,13 +18,14 @@ public class AskRequestHistory extends
     @Override
     public void run() {
         try {
-            sleep(10000);
+            // Secure time to let every slave stable, no horries
+            sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         // Create the request list from AskInterface
         AppRequest req = AskInterface.getHomepage(20);
-        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(1).build();
+        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(3).build();
 
         // Send the request list using puppet
         MasterMain.puppetMaster.sendRequest(list);

@@ -15,7 +15,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 /**
- * A thread that performs a GET.
+ * Individual whose perform resquests on server
  */
 class ClientThread extends
         Thread {
@@ -23,12 +23,26 @@ class ClientThread extends
 
     private final CloseableHttpClient httpClient;
     private final HttpContext context;
+
+    /** Client unique ID */
     private final int clientID;
+
+    /** Set of requests to perform **/
     private HttpRequestBase[] history;
+
+    /** How many times each request is performed */
     private short[] historyCounter;
+
+    /** Collect the execution round trip time */
     private final short[] executionTimes;
+
+    /** Summary of execution */
     public ThreadReport report;
+
+    /** Controller */
     private final ClientManager clientManager;
+
+    /** Bytes received counter */
     private long dataReceived;
 
 
@@ -55,7 +69,7 @@ class ClientThread extends
 
 
     /**
-     * Executes the GetMethod and prints some status information.
+     * Executes the GetMethod and prints status information.
      */
     @Override
     public void run() {
@@ -78,6 +92,7 @@ class ClientThread extends
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         byte[] bytes = EntityUtils.toByteArray(entity);
+                        // TODO Store the response in memory and flush for disk assync
                         dataReceived += bytes.length;
                     }
                 } catch (NoHttpResponseException e) {
@@ -110,13 +125,15 @@ class ClientThread extends
             }
         }
         long totalExecutionTime = System.currentTimeMillis() - startExecution;
+        // TODO optional: create better reportString
         String reportString = "";
         report.afterExecution(executionTimes,
                               totalExecutionTime,
                               reportString,
                               dataReceived);
+        // Store the report in controller to send later to master
         clientManager.addReport(clientID, report);
-        // Free Memory
+        // Free Memory (GB Collect later)
         history = null;
         historyCounter = null;
     }

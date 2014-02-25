@@ -1,4 +1,6 @@
-package inesc.master;
+package inesc.master.server;
+
+import inesc.master.AskRequestHistory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,7 +18,7 @@ import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
 
 /**
- * Create execution stories and send the stories for invocation
+ * Holds the Master, starts the API server
  * 
  * @author darionascimento
  */
@@ -27,7 +29,7 @@ public class MasterMain {
                                                    .build();
 
     // how many slaves should registry before start actions
-    public static final int EXPECTED_SLAVES = 1;
+    public static final int EXPECTED_SLAVES = 3;
     public static Master puppetMaster;
 
     public static void main(String[] args) throws IOException {

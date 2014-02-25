@@ -1,6 +1,6 @@
 package inesc.slave;
 
-import inesc.master.MasterMain;
+import inesc.master.server.MasterMain;
 import inesc.shared.AppEvaluationProtos;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppResponse;
@@ -27,13 +27,23 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
-@Path("/requests")
+/**
+ * Slave API for Master
+ * 
+ * @author darionascimento
+ */
+@Path("/")
 public class SlaveAPI {
     private static Logger log = Logger.getLogger(SlaveAPI.class);
     public static ClientManager clientManager = new ClientManager(MasterMain.MASTER_URI);
 
-
+    /**
+     * Order the begin of execution
+     * 
+     * @return OK
+     */
     @GET
+    @Path("start")
     @Produces("application/x-protobuf")
     public AppEvaluationProtos.AppResponse start() {
         // Async start the clients
@@ -41,7 +51,13 @@ public class SlaveAPI {
         return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
 
+    /**
+     * Set the requests to perform.
+     * 
+     * @param reqList: list of HTTP requests
+     */
     @POST
+    @Path("requests")
     @Consumes("application/x-protobuf")
     public void receiveRequestList(AppEvaluationProtos.AppReqList reqList) {
         int nRequests = reqList.getRequestsCount();
@@ -122,14 +138,4 @@ public class SlaveAPI {
             return params;
         }
     }
-
-
-
-
-
-
-
-
-
-
 }

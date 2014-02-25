@@ -2,6 +2,11 @@ package inesc.slave.reports;
 
 import inesc.shared.AppEvaluationProtos.ThreadReportMsg;
 
+/**
+ * Thread execution statistics
+ * 
+ * @author darionascimento
+ */
 public class ThreadReport {
     public int nTransactions;
     public int successTransactions;

@@ -74,7 +74,7 @@ public class MainTest extends
         // assertEquals(AppResponse.ResStatus.OK, res.getStatus());
 
         // Start Requests
-        wr = r.path("requests");
+        wr = r.path("start");
         AppResponse res = wr.get(AppResponse.class);
         assertEquals(AppResponse.ResStatus.OK, res.getStatus());
 
