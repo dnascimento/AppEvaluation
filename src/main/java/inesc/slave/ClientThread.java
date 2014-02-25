@@ -60,12 +60,11 @@ class ClientThread extends
 
 
         context = new BasicHttpContext();
-        report = new ThreadReport();
-        int totalRequests = report.preExecution(historyCounter, clientID);
+        report = new ThreadReport(historyCounter, clientID);
+        int totalRequests = report.nTransactions;
         executionTimes = new short[totalRequests];
         dataReceived = 0;
     }
-
 
 
     /**

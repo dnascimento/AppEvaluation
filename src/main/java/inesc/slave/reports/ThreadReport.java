@@ -21,13 +21,17 @@ public class ThreadReport {
     public long dataReceived;
     public int clientId;
 
-    public int preExecution(short[] historyCounter, int clientId) {
+    public ThreadReport(short[] historyCounter, int clientId) {
         nTransactions = 0;
         for (int i = 0; i < historyCounter.length; i++) {
             nTransactions += historyCounter[i];
         }
         this.clientId = clientId;
-        return nTransactions;
+    }
+
+
+    public ThreadReport() {
+        // Empty constructor for casts
     }
 
 
