@@ -37,6 +37,14 @@ message AppResponse{
 	optional ResStatus status = 2;
 }
 
+
+message AppStartMsg{
+	enum StartOpt{
+		Disk = 0;
+	}
+	repeated StartOpt opt = 1;
+}
+
 message ThreadReportMsg{
 	optional int32 nTransactions = 1;
 	optional int32 successTransactions = 2;

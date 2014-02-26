@@ -3,6 +3,7 @@ package inesc.slave;
 
 import inesc.share.ProtobufProviders;
 import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
 import inesc.shared.AppEvaluationProtos.SlaveRegistryMsg;
 import inesc.slave.reports.ThreadReport;
@@ -10,6 +11,7 @@ import inesc.slave.reports.ThreadReport;
 import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -161,5 +163,12 @@ public class ClientManager extends
 
         wr.type("application/x-protobuf").post(msg);
         log.info("Client Registerd");
+    }
+
+    /** Set the client Thead Execution Options */
+    public void setStartOptions(List<StartOpt> optList) {
+        for (ClientThread thread : clientThreads) {
+            thread.setStartOptions(optList);
+        }
     }
 }

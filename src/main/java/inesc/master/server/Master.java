@@ -3,9 +3,12 @@ package inesc.master.server;
 import inesc.share.ProtobufProviders;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.shared.AppEvaluationProtos.AppStartMsg;
+import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -76,13 +79,17 @@ public class Master {
 
     }
 
-    public void start() {
+    public void start(StartOpt... logOptions) {
         // TODO start only the nodes with requests
         for (URI nodeURI : slaves) {
             WebResource wr = c.resource(nodeURI);
             wr = wr.path("start");
             try {
-                AppResponse res = wr.get(AppResponse.class);
+                AppStartMsg startMsg = AppStartMsg.newBuilder()
+                                                  .addAllOpt(Arrays.asList(logOptions))
+                                                  .build();
+                AppResponse res = wr.type("application/x-protobuf")
+                                    .post(AppResponse.class, startMsg);
                 if (res.getStatus().equals(AppResponse.ResStatus.OK)) {
                     log.info("Master: Process Start");
                 } else {

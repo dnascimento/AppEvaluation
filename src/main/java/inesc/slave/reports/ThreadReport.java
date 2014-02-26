@@ -62,7 +62,11 @@ public class ThreadReport {
             totalTransferingTime += executionTimes[i];
         }
         successTransactions = nTransactions - failTransactions;
-        averageResponseTime = totalTransferingTime / successTransactions;
+        if (successTransactions != 0)
+            averageResponseTime = totalTransferingTime / successTransactions;
+        else
+            averageResponseTime = 0;
+
         transactionRate = ((double) nTransactions) / (totalExecutionTime / 1000);
     }
 

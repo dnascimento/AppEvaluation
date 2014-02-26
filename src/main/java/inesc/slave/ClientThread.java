@@ -1,14 +1,15 @@
 package inesc.slave;
 
+import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.slave.reports.ThreadReport;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
-import java.nio.channels.CompletionHandler;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NoHttpResponseException;
@@ -28,7 +29,6 @@ import org.apache.log4j.Logger;
 class ClientThread extends
         Thread {
     private static Logger log = Logger.getLogger(ClientThread.class);
-    private int received = 0;
     private final CloseableHttpClient httpClient;
     private final HttpContext context;
 
@@ -61,9 +61,11 @@ class ClientThread extends
     /** Bytes received counter */
     private long dataReceived = 0;
 
-
+    /** Async log file for flush the responses */
     private AsynchronousFileChannel fileChannel = null;
-    private CompletionHandler<Integer, Object> fileWriteHandler;
+
+    /** Flag to flush or not the responses */
+    private boolean diskLog = false;
 
 
     public ClientThread(CloseableHttpClient httpClient,
@@ -76,9 +78,6 @@ class ClientThread extends
         this.history = history;
         this.historyCounter = historyCounter;
         this.clientID = clientID;
-
-        int slavePort = SlaveMain.SLAVE_URI.getPort();
-        initAsyncFile(slavePort);
 
         context = new BasicHttpContext();
         report = new ThreadReport(historyCounter, clientID);
@@ -112,10 +111,9 @@ class ClientThread extends
                     executionTimes[requestID] = (short) duration;
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
-                        System.out.println("Received: " + received++);
                         responseData[requestID] = ByteBuffer.wrap(EntityUtils.toByteArray(entity));
                         dataReceived += responseData[requestID].capacity();
-                        if (dataReceived > 10) {
+                        if (diskLog && dataReceived > 10) {
                             // To save memory and avoid head problems, flush async
                             flushData();
                         }
@@ -158,11 +156,13 @@ class ClientThread extends
                               reportString,
                               dataReceived);
         // Flush the remain data
-        flushData();
-        try {
-            fileChannel.close();
-        } catch (IOException e) {
-            log.error(e);
+        if (diskLog) {
+            flushData();
+            try {
+                fileChannel.close();
+            } catch (IOException e) {
+                log.error(e);
+            }
         }
         // Store the report in controller to send later to master
         clientManager.addReport(clientID, report);
@@ -172,12 +172,10 @@ class ClientThread extends
     }
 
     public void flushData() {
-        System.out.println("Flush");
         ByteBuffer separator = ByteBuffer.wrap("\n--------\n".getBytes());
         long separatorSize = separator.capacity();
         while (flushedRequests < responseData.length
                 && responseData[flushedRequests] != null) {
-            System.out.println("Flush Exec");
 
             long written = responseData[flushedRequests].capacity();
 
@@ -191,6 +189,22 @@ class ClientThread extends
             responseData[flushedRequests] = null;
 
             flushedRequests++;
+        }
+    }
+
+
+    public void setStartOptions(List<StartOpt> optList) {
+        for (StartOpt opt : optList) {
+            switch (opt.getNumber()) {
+            case StartOpt.Disk_VALUE:
+                diskLog = true;
+                int slavePort = SlaveMain.SLAVE_URI.getPort();
+                initAsyncFile(slavePort);
+                break;
+            default:
+                log.error("Unknown start option");
+                break;
+            }
         }
     }
 
@@ -209,14 +223,6 @@ class ClientThread extends
         } catch (IOException e) {
             log.error(e);
         }
-        fileWriteHandler = new CompletionHandler<Integer, Object>() {
-            public void failed(Throwable exc, Object attachment) {
-                log.error("Error flushing data: " + exc);
-            }
-
-            public void completed(Integer result, Object attachment) {
-                log.info("Transfered data flush to disk");
-            }
-        };
     }
+
 }

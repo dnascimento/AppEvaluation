@@ -24,12 +24,13 @@ public class AskRequestHistory extends
             e.printStackTrace();
         }
         // Create the request list from AskInterface
-        AppRequest req = AskInterface.getHomepage(40);
-        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(2).build();
+        AppRequest req = AskInterface.getHomepage(50);
+        AppReqList list = AppReqList.newBuilder().addRequests(req).setNClients(3).build();
 
         // Send the request list using puppet
         MasterMain.puppetMaster.sendRequest(list);
         // Start Execution
+        // MasterMain.puppetMaster.start(StartOpt.Disk);
         MasterMain.puppetMaster.start();
     }
 }

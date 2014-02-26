@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -40,11 +39,12 @@ public class SlaveAPI {
      * 
      * @return OK
      */
-    @GET
+    @POST
     @Path("start")
     @Produces("application/x-protobuf")
-    public AppEvaluationProtos.AppResponse start() {
+    public AppEvaluationProtos.AppResponse start(AppEvaluationProtos.AppStartMsg msg) {
         // Async start the clients
+        SlaveMain.clientManager.setStartOptions(msg.getOptList());
         SlaveMain.clientManager.start();
         return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
@@ -74,10 +74,30 @@ public class SlaveAPI {
                 log.error("Unsupported Encoding");
             }
         }
-        for (i = 0; i < nClients; i++) {
-            SlaveMain.clientManager.newClient(history, historyCounter);
+        addNClients(nClients, history, historyCounter);
+    }
+
+    private void addNClients(int nClients, HttpRequestBase[] history, short[] counterOrg) {
+        for (int i = 0; i < nClients; i++) {
+            short[] counter = cloneCounter(counterOrg);
+            SlaveMain.clientManager.newClient(history, counter);
         }
     }
+
+    private short[] cloneCounter(short[] c) {
+        short[] counter = new short[c.length];
+        for (int i = 0; i < c.length; i++) {
+            counter[i] = c[i];
+        }
+        return counter;
+    }
+
+
+
+
+
+
+
 
     /**
      * Convert Protocol Buffer to HTTP Package
