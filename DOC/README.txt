@@ -28,19 +28,5 @@ Pupet - Invokes the rest API
 restAPI - Retrieves the requests
 client - execute the requests
 
-Messages between Pupet and Slaves:
-	List Requests:
-		Request:
-			Type,URL,Parameters,number of executions (Nexec)
-	
-	List Response:
-		Response:
-			ClientID, Content, Delay
-	
-	StartRequesting
-	
-	InitClient
-		ClientID
-	
 
 
