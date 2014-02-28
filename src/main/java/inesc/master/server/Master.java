@@ -1,5 +1,6 @@
 package inesc.master.server;
 
+import inesc.master.AskRequestHistory;
 import inesc.share.ProtobufProviders;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppResponse;
@@ -49,10 +50,18 @@ public class Master {
         slaves.add(uri);
         if (++clientCount == MasterMain.EXPECTED_SLAVES) {
             log.info("All slaves Registered");
-            MasterMain.startRequests();
+            startRequests();
         }
     }
 
+
+    /** Invoked after slave registry */
+    public void startRequests() {
+        log.info("Will start requests...");
+        new AskRequestHistory().start();
+    }
+
+    /** Send request to every slave */
     public void sendRequest(AppReqList requestList) {
         sendRequest(requestList, slaves.size());
     }
@@ -79,6 +88,11 @@ public class Master {
 
     }
 
+    /**
+     * Order slaves to start the request
+     * 
+     * @param logOptins Record on Disk
+     */
     public void start(StartOpt... logOptions) {
         // TODO start only the nodes with requests
         for (URI nodeURI : slaves) {
@@ -101,10 +115,20 @@ public class Master {
         }
     }
 
+    /**
+     * New report from slave
+     * 
+     * @param reportList
+     */
     public void addReport(ReportAgregatedMsg reportList) {
         reports.add(reportList);
     }
 
+    /**
+     * Get the reports collected until now
+     * 
+     * @return
+     */
     public String getReports() {
         StringBuilder sb = new StringBuilder();
         for (ReportAgregatedMsg msg : reports) {

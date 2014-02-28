@@ -1,4 +1,4 @@
-package inesc.slave;
+package inesc.slave.server;
 
 import inesc.shared.AppEvaluationProtos;
 import inesc.shared.AppEvaluationProtos.AppRequest;
@@ -8,6 +8,7 @@ import inesc.shared.AppEvaluationProtos.Parameter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -31,8 +32,8 @@ import org.apache.log4j.Logger;
  * @author darionascimento
  */
 @Path("/")
-public class SlaveAPI {
-    private static Logger log = Logger.getLogger(SlaveAPI.class);
+public class SlaveService {
+    private static Logger log = Logger.getLogger(SlaveService.class);
 
     /**
      * Order the begin of execution
@@ -77,30 +78,26 @@ public class SlaveAPI {
         addNClients(nClients, history, historyCounter);
     }
 
+    /**
+     * Create the client threads and prepare the runner
+     * 
+     * @param nClients
+     * @param history
+     * @param counterOrg
+     */
     private void addNClients(int nClients, HttpRequestBase[] history, short[] counterOrg) {
         for (int i = 0; i < nClients; i++) {
-            short[] counter = cloneCounter(counterOrg);
+            short[] counter = Arrays.copyOf(counterOrg, counterOrg.length);
             SlaveMain.clientManager.newClient(history, counter);
         }
     }
-
-    private short[] cloneCounter(short[] c) {
-        short[] counter = new short[c.length];
-        for (int i = 0; i < c.length; i++) {
-            counter[i] = c[i];
-        }
-        return counter;
-    }
-
-
-
 
 
 
 
 
     /**
-     * Convert Protocol Buffer to HTTP Package
+     * Convert Protocol Buffer to HTTP Package, the object used by HTTP Client
      * 
      * @param reqBuffer
      * @return HTTPRequest package

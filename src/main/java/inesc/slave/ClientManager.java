@@ -130,6 +130,9 @@ public class ClientManager extends
 
     }
 
+    /**
+     * Send the reports to master
+     */
     private void sendReportToMaster() {
         ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
         for (int i = 0; i < clientReports.length; i++) {
@@ -142,6 +145,9 @@ public class ClientManager extends
         log.info(res);
     }
 
+    /**
+     * List all reports
+     */
     private void showReports() {
         for (int i = 0; i < clientReports.length; i++) {
             log.info(clientReports[i]);
@@ -149,11 +155,23 @@ public class ClientManager extends
     }
 
 
-
-    public synchronized void addReport(int clientId, ThreadReport report) {
+    /**
+     * Add report after execution (invoked per thread)
+     * Synchonization is done by individual array access
+     * 
+     * @param clientId
+     * @param report
+     */
+    public void addReport(int clientId, ThreadReport report) {
         clientReports[clientId] = report;
     }
 
+    /**
+     * Register slave on master
+     * 
+     * @param url
+     * @param port
+     */
     public void register(String url, int port) {
         WebResource wr = r.path("master/registry");
         SlaveRegistryMsg msg = SlaveRegistryMsg.newBuilder()

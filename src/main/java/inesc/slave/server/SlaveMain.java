@@ -1,6 +1,7 @@
-package inesc.slave;
+package inesc.slave.server;
 
 import inesc.master.server.MasterMain;
+import inesc.slave.ClientManager;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -17,10 +18,17 @@ import org.apache.log4j.xml.DOMConfigurator;
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
+/**
+ * Start the slave side
+ * 
+ * @author darionascimento
+ */
 public class SlaveMain {
     public static URI SLAVE_URI;
     private static Logger log = Logger.getLogger(SlaveMain.class);
+    /** Minimum port of server */
     private final static int PORT_RANGE_MIN = 9000;
+    /** Max port of server */
     private final static int PORT_RANGE_MAX = 9200;
     public static ClientManager clientManager;
 
@@ -29,12 +37,13 @@ public class SlaveMain {
         DOMConfigurator.configure("log4j.xml");
 
         int port = getFreePort();
+        // TODO Get local IP
         String path = "http://localhost/";
         SLAVE_URI = UriBuilder.fromUri(path).port(port).build();
-
+        // Initiate the domain controller
         clientManager = new ClientManager(MasterMain.MASTER_URI);
 
-
+        // start the service server
         log.info("Starting slave....");
         SelectorThread threadSelector = createServer(SLAVE_URI);
         log.info("Client at " + SLAVE_URI);
@@ -83,13 +92,4 @@ public class SlaveMain {
             }
         }
     }
-
-
-
-
-
-
-
-
-
 }

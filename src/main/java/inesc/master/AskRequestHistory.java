@@ -13,7 +13,9 @@ public class AskRequestHistory extends
         Thread {
 
 
-
+    /**
+     * New thread to create the execution histories and require the client to start
+     */
     @Override
     public void run() {
         try {
@@ -25,14 +27,15 @@ public class AskRequestHistory extends
         AppReqList.Builder reqSequence = AppReqList.newBuilder();
 
         // Create the request list from AskInterface
-        reqSequence.addRequests(AskInterface.getHomepage(1));
-        reqSequence.addRequests(AskInterface.getNewQuestion(1));
-        reqSequence.addRequests(AskInterface.postNewQuestion(1,
-                                                             "Teste",
-                                                             "fixe",
-                                                             "ADOREI FUNCIONAR"));
+        // reqSequence.addRequests(AskInterface.getGoogle(100));
+        reqSequence.addRequests(AskInterface.getHomepage(100));
+        // reqSequence.addRequests(AskInterface.getNewQuestion(1));
+        // reqSequence.addRequests(AskInterface.postNewQuestion(1,
+        // "Teste",
+        // "fixe",
+        // "ADOREI FUNCIONAR"));
 
-        AppReqList reqList = reqSequence.setNClients(1).build();
+        AppReqList reqList = reqSequence.setNClients(25).build();
 
         // Send the request list using puppet
         MasterMain.puppetMaster.sendRequest(reqList);

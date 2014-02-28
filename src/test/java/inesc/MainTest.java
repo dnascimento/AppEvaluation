@@ -5,7 +5,7 @@ import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
 import inesc.shared.AppEvaluationProtos.AppResponse;
-import inesc.slave.SlaveMain;
+import inesc.slave.server.SlaveMain;
 
 import java.util.HashMap;
 import java.util.Map;

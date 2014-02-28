@@ -2,6 +2,7 @@ package inesc.slave;
 
 import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.slave.reports.ThreadReport;
+import inesc.slave.server.SlaveMain;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

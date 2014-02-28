@@ -109,7 +109,8 @@ public class ThreadReport {
         sb.append("\n Transactions: " + nTransactions + "\n");
         sb.append("Success: " + successTransactions + "\n");
         sb.append("Fail: " + failTransactions + "\n");
-        sb.append("Success Rate: " + (successTransactions / nTransactions) * 100 + "% \n");
+        sb.append("Success Rate: " + ((double) successTransactions / nTransactions) * 100
+                + "% \n");
 
         sb.append("Transaction Rate: " + String.format("%.2f", transactionRate)
                 + " req/sec \n\n");

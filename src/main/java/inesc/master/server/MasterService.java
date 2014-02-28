@@ -22,15 +22,26 @@ import org.apache.log4j.Logger;
  * @author darionascimento
  */
 @Path("/master")
-public class MasterAPI {
-    private static Logger log = Logger.getLogger(MasterAPI.class);
+public class MasterService {
+    private static Logger log = Logger.getLogger(MasterService.class);
 
+    /**
+     * HTTP Interface for browsers to collect reports
+     * 
+     * @return
+     */
     @GET
     @Produces("text/plain")
     public String getReports() {
         return MasterMain.puppetMaster.getReports();
     }
 
+    /**
+     * REST Interface for slaves to add the reports
+     * 
+     * @param reportList
+     * @return OK
+     */
     @POST
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")

@@ -8,13 +8,23 @@ import inesc.shared.AppEvaluationProtos.Parameter;
 
 /**
  * Generate request to Invoke the website (Highest level API)
+ * The output is a protocol buffer to avoid cast to and from.
+ * The class could have a builder but I used static to simplify.
  * 
  * @author darionascimento
  */
 public class AskInterface extends
         Thread {
 
-    public static String baseURL = "http://localhost:8888/";
+    public static String baseURL = "http://localhost:8888";
+
+    public static AppRequest getGoogle(int nExec) {
+        return AppRequest.newBuilder()
+                         .setType(ReqType.GET)
+                         .setNExec(nExec)
+                         .setUrl("http://google.at")
+                         .build();
+    }
 
 
     public static AppRequest getHomepage(int nExec) {
@@ -223,6 +233,7 @@ public class AskInterface extends
                                        .setValue(answerID));
         return builder.build();
     }
+
 
 
 
