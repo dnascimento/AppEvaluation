@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 @Path("/")
 public class SlaveService {
     private static Logger log = Logger.getLogger(SlaveService.class);
+    static Slave slave = new Slave();
 
     /**
      * Order the begin of execution
@@ -45,8 +46,8 @@ public class SlaveService {
     @Produces("application/x-protobuf")
     public AppEvaluationProtos.AppResponse start(AppEvaluationProtos.AppStartMsg msg) {
         // Async start the clients
-        SlaveMain.clientManager.setStartOptions(msg.getOptList());
-        SlaveMain.clientManager.start();
+        slave.clientManager.setStartOptions(msg.getOptList());
+        slave.clientManager.start();
         return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
 
@@ -88,7 +89,7 @@ public class SlaveService {
     private void addNClients(int nClients, HttpRequestBase[] history, short[] counterOrg) {
         for (int i = 0; i < nClients; i++) {
             short[] counter = Arrays.copyOf(counterOrg, counterOrg.length);
-            SlaveMain.clientManager.newClient(history, counter);
+            slave.clientManager.newClient(history, counter);
         }
     }
 

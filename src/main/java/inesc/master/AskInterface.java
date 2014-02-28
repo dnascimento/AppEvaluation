@@ -13,8 +13,7 @@ import inesc.shared.AppEvaluationProtos.Parameter;
  * 
  * @author darionascimento
  */
-public class AskInterface extends
-        Thread {
+public class AskInterface {
 
     public static String baseURL = "http://localhost:8888";
 

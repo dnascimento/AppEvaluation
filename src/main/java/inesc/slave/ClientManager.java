@@ -1,15 +1,11 @@
 package inesc.slave;
 
 
-import inesc.share.ProtobufProviders;
-import inesc.shared.AppEvaluationProtos.AppResponse;
 import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
-import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
-import inesc.shared.AppEvaluationProtos.SlaveRegistryMsg;
 import inesc.slave.reports.ThreadReport;
+import inesc.slave.server.Slave;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,11 +15,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 /**
  * Manages the set of ClientThreads. Each thread represents a distinct parallel client
@@ -50,17 +41,12 @@ public class ClientManager extends
     private ThreadReport[] clientReports;
     private CloseableHttpClient httpClient;
     private int id;
-    private final WebResource r;
+    private final Slave slave;
 
 
-    public ClientManager(URI masterURI) {
-        ClientConfig cc = new DefaultClientConfig();
-        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
-        cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
-        Client c = Client.create(cc);
-        r = c.resource(masterURI);
-
+    public ClientManager(Slave slave) {
         restart();
+        this.slave = slave;
     }
 
     public void restart() {
@@ -123,36 +109,14 @@ public class ClientManager extends
             log.error("Error closing HTTP Client" + e);
         }
         log.info("Clients done...");
-        showReports();
-        sendReportToMaster();
+
+        slave.sendReportToMaster(clientReports);
         // Clean the threads and connections
         this.restart();
 
     }
 
-    /**
-     * Send the reports to master
-     */
-    private void sendReportToMaster() {
-        ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
-        for (int i = 0; i < clientReports.length; i++) {
-            bd.addReports(clientReports[i].toProtBuffer());
-        }
 
-        WebResource wr = r.path("master");
-        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
-                                                                 bd.build());
-        log.info(res);
-    }
-
-    /**
-     * List all reports
-     */
-    private void showReports() {
-        for (int i = 0; i < clientReports.length; i++) {
-            log.info(clientReports[i]);
-        }
-    }
 
 
     /**
@@ -166,22 +130,6 @@ public class ClientManager extends
         clientReports[clientId] = report;
     }
 
-    /**
-     * Register slave on master
-     * 
-     * @param url
-     * @param port
-     */
-    public void register(String url, int port) {
-        WebResource wr = r.path("master/registry");
-        SlaveRegistryMsg msg = SlaveRegistryMsg.newBuilder()
-                                               .setPort(port)
-                                               .setUrl(url)
-                                               .build();
-
-        wr.type("application/x-protobuf").post(msg);
-        log.info("Client Registerd");
-    }
 
     /** Set the client Thead Execution Options */
     public void setStartOptions(List<StartOpt> optList) {

@@ -1,6 +1,6 @@
 package inesc.master;
 
-import inesc.master.server.MasterMain;
+import inesc.master.server.MasterService;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 
 /**
@@ -38,9 +38,9 @@ public class AskRequestHistory extends
         AppReqList reqList = reqSequence.setNClients(25).build();
 
         // Send the request list using puppet
-        MasterMain.puppetMaster.sendRequest(reqList);
+        MasterService.puppetMaster.sendRequest(reqList);
         // Start Execution
         // MasterMain.puppetMaster.start(StartOpt.Disk);
-        MasterMain.puppetMaster.start();
+        MasterService.puppetMaster.start();
     }
 }

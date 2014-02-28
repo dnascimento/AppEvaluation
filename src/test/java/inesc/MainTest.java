@@ -5,6 +5,7 @@ import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
 import inesc.shared.AppEvaluationProtos.AppResponse;
+import inesc.shared.AppEvaluationProtos.AppStartMsg;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -58,7 +59,6 @@ public class MainTest extends
 
     public void testRequestsList() {
         WebResource wr = r.path("requests");
-        // TODO Create stubs for testing
 
         // AppResponse p = wr.get(AppResponse.class);
         AppRequest req = AppRequest.newBuilder()
@@ -71,13 +71,16 @@ public class MainTest extends
                                        .setNClients(1)
                                        .build();
         wr.type("application/x-protobuf").post(reqList);
-        // assertEquals(AppResponse.ResStatus.OK, res.getStatus());
-
-        // Start Requests
-        wr = r.path("start");
-        AppResponse res = wr.get(AppResponse.class);
-        assertEquals(AppResponse.ResStatus.OK, res.getStatus());
-
     }
 
+    public void testStart() {
+        testRequestsList();
+        WebResource wr = r.path("start");
+        AppStartMsg startMsg = AppStartMsg.newBuilder().build();
+        // Start Requests
+        AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class,
+                                                                 startMsg);
+
+        assertEquals(AppResponse.ResStatus.OK, res.getStatus());
+    }
 }

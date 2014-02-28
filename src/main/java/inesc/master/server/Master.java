@@ -34,6 +34,9 @@ public class Master {
     private final LinkedList<URI> slaves = new LinkedList<URI>();
     private static final LinkedList<ReportAgregatedMsg> reports = new LinkedList<ReportAgregatedMsg>();
 
+    /** how many slaves should registry before start actions */
+    public static final int EXPECTED_SLAVES = 2;
+
     int clientCount = 0;
 
 
@@ -48,7 +51,7 @@ public class Master {
     public void addNewSlave(URI uri) {
         log.info("New slave registered:" + uri);
         slaves.add(uri);
-        if (++clientCount == MasterMain.EXPECTED_SLAVES) {
+        if (++clientCount == EXPECTED_SLAVES) {
             log.info("All slaves Registered");
             startRequests();
         }

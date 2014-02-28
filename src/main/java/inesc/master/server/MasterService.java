@@ -17,13 +17,17 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.log4j.Logger;
 
 /**
- * Master API for slaves
+ * Master API for slaves.
+ * Holds the PuppetMaster: the server controller
  * 
  * @author darionascimento
  */
 @Path("/master")
 public class MasterService {
     private static Logger log = Logger.getLogger(MasterService.class);
+
+    /** The domain controller - standalone */
+    public static Master puppetMaster = new Master();
 
     /**
      * HTTP Interface for browsers to collect reports
@@ -33,7 +37,7 @@ public class MasterService {
     @GET
     @Produces("text/plain")
     public String getReports() {
-        return MasterMain.puppetMaster.getReports();
+        return puppetMaster.getReports();
     }
 
     /**
@@ -47,7 +51,7 @@ public class MasterService {
     @Produces("application/x-protobuf")
     public AppResponse reflect(AppEvaluationProtos.ReportAgregatedMsg reportList) {
         log.info(reportList);
-        MasterMain.puppetMaster.addReport(reportList);
+        puppetMaster.addReport(reportList);
         return AppResponse.newBuilder().setStatus(ResStatus.OK).build();
     }
 
@@ -63,6 +67,6 @@ public class MasterService {
         URI uri = UriBuilder.fromUri(registryMsg.getUrl())
                             .port(registryMsg.getPort())
                             .build();
-        MasterMain.puppetMaster.addNewSlave(uri);
+        puppetMaster.addNewSlave(uri);
     }
 }

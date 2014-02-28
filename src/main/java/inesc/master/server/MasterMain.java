@@ -16,7 +16,7 @@ import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 
 
 /**
- * Holds the Master, starts the API server
+ * Starts the Service
  * 
  * @author darionascimento
  */
@@ -26,10 +26,7 @@ public class MasterMain {
                                                    .port(9999)
                                                    .build();
 
-    /** how many slaves should registry before start actions */
-    public static final int EXPECTED_SLAVES = 2;
-    /** The domain controller - standalone */
-    public static Master puppetMaster;
+
 
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
@@ -38,15 +35,11 @@ public class MasterMain {
         SelectorThread threadSelector;
         threadSelector = createServer(MASTER_URI);
 
-
-        // Start the domain controller
-        puppetMaster = new Master();
         log.info("Waiting for slaves registry..");
         log.info("Hit stop it...");
         System.in.read();
         threadSelector.stopEndpoint();
     }
-
 
 
     /** Create the Service Server */
