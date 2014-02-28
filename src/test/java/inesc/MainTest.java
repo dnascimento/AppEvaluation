@@ -5,8 +5,8 @@ import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
 import inesc.shared.AppEvaluationProtos.AppResponse;
-import inesc.slave.server.SlaveMain;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +30,7 @@ public class MainTest extends
 
     private SelectorThread threadSelector;
     private WebResource r;
+    private URI testServerURI;
 
     @Override
     protected void setUp() throws Exception {
@@ -38,17 +39,15 @@ public class MainTest extends
         Map<String, String> initParams = new HashMap<String, String>();
         initParams.put("com.sun.jersey.config.property.packages",
                        "inesc.slave; inesc.share");
-        threadSelector = GrizzlyWebContainerFactory.create(UriBuilder.fromUri("http://localhost/")
-                                                                     .port(9998)
-                                                                     .build(),
-                                                           initParams);
+        testServerURI = UriBuilder.fromUri("http://localhost/").port(9998).build();
+        threadSelector = GrizzlyWebContainerFactory.create(testServerURI, initParams);
 
 
         ClientConfig cc = new DefaultClientConfig();
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
         Client c = Client.create(cc);
-        r = c.resource(SlaveMain.SLAVE_URI);
+        r = c.resource(testServerURI);
     }
 
     @Override
@@ -59,6 +58,7 @@ public class MainTest extends
 
     public void testRequestsList() {
         WebResource wr = r.path("requests");
+        // TODO Create stubs for testing
 
         // AppResponse p = wr.get(AppResponse.class);
         AppRequest req = AppRequest.newBuilder()
