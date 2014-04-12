@@ -75,8 +75,7 @@ public class ClientManager extends
     }
 
     public void newClient(HttpRequestBase[] history, short[] historyCounter) {
-        ClientThread thread = new ClientThread(httpClient, history, historyCounter, id++,
-                this);
+        ClientThread thread = new ClientThread(httpClient, history, historyCounter, id++, this);
         clientThreads.add(thread);
         log.info("New Client with " + history.length + " requests");
     }
@@ -115,7 +114,6 @@ public class ClientManager extends
         this.restart();
 
     }
-
 
 
 
