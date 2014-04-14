@@ -32,11 +32,7 @@ public class ProtobufProviders {
     @Consumes("application/x-protobuf")
     public static class ProtobufMessageBodyReader
             implements MessageBodyReader<Message> {
-        public boolean isReadable(
-                Class<?> type,
-                    Type genericType,
-                    Annotation[] annotations,
-                    MediaType mediaType) {
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return Message.class.isAssignableFrom(type);
         }
 
@@ -62,22 +58,13 @@ public class ProtobufProviders {
     @Produces("application/x-protobuf")
     public static class ProtobufMessageBodyWriter
             implements MessageBodyWriter<Message> {
-        public boolean isWriteable(
-                Class<?> type,
-                    Type genericType,
-                    Annotation[] annotations,
-                    MediaType mediaType) {
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return Message.class.isAssignableFrom(type);
         }
 
         private final Map<Object, byte[]> buffer = new WeakHashMap<Object, byte[]>();
 
-        public long getSize(
-                Message m,
-                    Class<?> type,
-                    Type genericType,
-                    Annotation[] annotations,
-                    MediaType mediaType) {
+        public long getSize(Message m, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
                 m.writeTo(baos);
@@ -97,8 +84,7 @@ public class ProtobufProviders {
                     Annotation[] annotations,
                     MediaType mediaType,
                     MultivaluedMap httpHeaders,
-                    OutputStream entityStream) throws IOException,
-                WebApplicationException {
+                    OutputStream entityStream) throws IOException, WebApplicationException {
             entityStream.write(buffer.remove(m));
         }
     }

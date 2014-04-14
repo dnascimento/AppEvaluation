@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave.server;
 
 import inesc.master.server.MasterMain;
@@ -45,6 +52,10 @@ public class Slave {
         register(slaveURL, slavePort);
     }
 
+    public void resetClientManager() {
+        clientManager = new ClientManager(this);
+    }
+
     /**
      * Init the REST client to connect to master
      */
@@ -64,10 +75,7 @@ public class Slave {
      */
     private void register(String url, int port) {
         WebResource wr = r.path("master/registry");
-        SlaveRegistryMsg msg = SlaveRegistryMsg.newBuilder()
-                                               .setPort(port)
-                                               .setUrl(url)
-                                               .build();
+        SlaveRegistryMsg msg = SlaveRegistryMsg.newBuilder().setPort(port).setUrl(url).build();
 
         wr.type("application/x-protobuf").post(msg);
         log.info("Client Registerd");

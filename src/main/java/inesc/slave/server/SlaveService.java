@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave.server;
 
 import inesc.shared.AppEvaluationProtos;
@@ -23,6 +30,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
@@ -33,6 +41,7 @@ import org.apache.log4j.Logger;
  */
 @Path("/")
 public class SlaveService {
+    private static final String JSON = "application/json";
     private static Logger log = Logger.getLogger(SlaveService.class);
     static Slave slave = new Slave();
 
@@ -60,6 +69,7 @@ public class SlaveService {
     @Path("requests")
     @Consumes("application/x-protobuf")
     public void receiveRequestList(AppEvaluationProtos.AppReqList reqList) {
+        slave.resetClientManager();
         int nRequests = reqList.getRequestsCount();
         int nClients = reqList.getNClients();
         System.out.println("Got " + nRequests + " requests for " + nClients + " clients");
@@ -119,16 +129,45 @@ public class SlaveService {
             break;
         case PUT:
             HttpPut put = new HttpPut(url);
-            put.setEntity(new UrlEncodedFormEntity(params.build()));
+            if (reqBuffer.hasContentType() && reqBuffer.getContentType().equals(JSON)) {
+                put.setHeader("Content-Type", JSON);
+                put.setEntity(parametersToJson(reqBuffer.getParametersList()));
+            } else {
+                put.setEntity(new UrlEncodedFormEntity(params.build()));
+            }
             request = put;
             break;
         case POST:
             HttpPost post = new HttpPost(url);
-            post.setEntity(new UrlEncodedFormEntity(params.build()));
+            if (reqBuffer.hasContentType() && reqBuffer.getContentType().equals(JSON)) {
+                post.setHeader("Content-Type", JSON);
+                post.setEntity(parametersToJson(reqBuffer.getParametersList()));
+            } else {
+                post.setEntity(new UrlEncodedFormEntity(params.build()));
+            }
             request = post;
             break;
         }
         return request;
+    }
+
+    private StringEntity parametersToJson(List<Parameter> parametersList) throws UnsupportedEncodingException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"");
+        boolean first = true;
+        for (Parameter p : parametersList) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(p.getKey());
+            sb.append("\":\"");
+            sb.append(p.getValue());
+            sb.append("\"");
+        }
+        sb.append("}");
+        return new StringEntity(sb.toString());
     }
 
     /**

@@ -1,6 +1,12 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.master.server;
 
-import inesc.master.AskRequestHistory;
 import inesc.share.ProtobufProviders;
 import inesc.shared.AppEvaluationProtos.AppReqList;
 import inesc.shared.AppEvaluationProtos.AppResponse;
@@ -35,17 +41,17 @@ public class Master {
     private static final LinkedList<ReportAgregatedMsg> reports = new LinkedList<ReportAgregatedMsg>();
 
     /** how many slaves should registry before start actions */
-    public static final int EXPECTED_SLAVES = 2;
+    public static final int EXPECTED_SLAVES = 1;
 
     int clientCount = 0;
 
 
     public Master() {
-
         ClientConfig cc = new DefaultClientConfig();
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyReader.class);
         cc.getClasses().add(ProtobufProviders.ProtobufMessageBodyWriter.class);
         c = Client.create(cc);
+        new Interface(this).start();
     }
 
     public void addNewSlave(URI uri) {
@@ -53,16 +59,9 @@ public class Master {
         slaves.add(uri);
         if (++clientCount == EXPECTED_SLAVES) {
             log.info("All slaves Registered");
-            startRequests();
         }
     }
 
-
-    /** Invoked after slave registry */
-    public void startRequests() {
-        log.info("Will start requests...");
-        new AskRequestHistory().start();
-    }
 
     /** Send request to every slave */
     public void sendRequest(AppReqList requestList) {
@@ -102,11 +101,8 @@ public class Master {
             WebResource wr = c.resource(nodeURI);
             wr = wr.path("start");
             try {
-                AppStartMsg startMsg = AppStartMsg.newBuilder()
-                                                  .addAllOpt(Arrays.asList(logOptions))
-                                                  .build();
-                AppResponse res = wr.type("application/x-protobuf")
-                                    .post(AppResponse.class, startMsg);
+                AppStartMsg startMsg = AppStartMsg.newBuilder().addAllOpt(Arrays.asList(logOptions)).build();
+                AppResponse res = wr.type("application/x-protobuf").post(AppResponse.class, startMsg);
                 if (res.getStatus().equals(AppResponse.ResStatus.OK)) {
                     log.info("Master: Process Start");
                 } else {

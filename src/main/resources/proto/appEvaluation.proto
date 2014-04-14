@@ -20,6 +20,7 @@ message AppRequest {
 	required string url = 2;
 	required int32 nExec = 3;
 	repeated Parameter parameters = 4;
+	optional string contentType = 5;
 
 }
 

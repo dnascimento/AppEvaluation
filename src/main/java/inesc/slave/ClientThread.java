@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave;
 
 import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
@@ -152,10 +159,7 @@ class ClientThread extends
         long totalExecutionTime = System.currentTimeMillis() - startExecution;
         // TODO optional: create better reportString
         String reportString = "";
-        report.afterExecution(executionTimes,
-                              totalExecutionTime,
-                              reportString,
-                              dataReceived);
+        report.afterExecution(executionTimes, totalExecutionTime, reportString, dataReceived);
         // Flush the remain data
         if (diskLog) {
             flushData();
@@ -175,8 +179,7 @@ class ClientThread extends
     public void flushData() {
         ByteBuffer separator = ByteBuffer.wrap("\n--------\n".getBytes());
         long separatorSize = separator.capacity();
-        while (flushedRequests < responseData.length
-                && responseData[flushedRequests] != null) {
+        while (flushedRequests < responseData.length && responseData[flushedRequests] != null) {
 
             long written = responseData[flushedRequests].capacity();
 

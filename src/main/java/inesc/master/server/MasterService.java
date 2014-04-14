@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.master.server;
 
 import inesc.shared.AppEvaluationProtos;
@@ -64,9 +71,7 @@ public class MasterService {
     @Path("registry")
     @Consumes("application/x-protobuf")
     public void registry(SlaveRegistryMsg registryMsg) {
-        URI uri = UriBuilder.fromUri(registryMsg.getUrl())
-                            .port(registryMsg.getPort())
-                            .build();
+        URI uri = UriBuilder.fromUri(registryMsg.getUrl()).port(registryMsg.getPort()).build();
         puppetMaster.addNewSlave(uri);
     }
 }

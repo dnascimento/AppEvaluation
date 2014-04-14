@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave.reports;
 
 import inesc.shared.AppEvaluationProtos.ThreadReportMsg;
@@ -35,11 +42,7 @@ public class ThreadReport {
     }
 
 
-    public void afterExecution(
-            short[] executionTimes,
-                long totalExecutionTime,
-                String reportString,
-                long dataReceived) {
+    public void afterExecution(short[] executionTimes, long totalExecutionTime, String reportString, long dataReceived) {
         this.report = reportString;
         this.dataReceived = dataReceived;
         this.totalExecutionTime = totalExecutionTime;
@@ -109,11 +112,9 @@ public class ThreadReport {
         sb.append("\n Transactions: " + nTransactions + "\n");
         sb.append("Success: " + successTransactions + "\n");
         sb.append("Fail: " + failTransactions + "\n");
-        sb.append("Success Rate: " + ((double) successTransactions / nTransactions) * 100
-                + "% \n");
+        sb.append("Success Rate: " + ((double) successTransactions / nTransactions) * 100 + "% \n");
 
-        sb.append("Transaction Rate: " + String.format("%.2f", transactionRate)
-                + " req/sec \n\n");
+        sb.append("Transaction Rate: " + String.format("%.2f", transactionRate) + " req/sec \n\n");
         sb.append("Total time: \n");
         sb.append("Transfering: " + totalTransferingTime + "ms \n");
         sb.append("Execution: " + totalExecutionTime + "ms \n");

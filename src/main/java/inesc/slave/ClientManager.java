@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave;
 
 
@@ -112,7 +119,6 @@ public class ClientManager extends
         slave.sendReportToMaster(clientReports);
         // Clean the threads and connections
         this.restart();
-
     }
 
 

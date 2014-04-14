@@ -1,3 +1,10 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.slave.server;
 
 import java.io.IOException;
@@ -20,7 +27,8 @@ import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
  * 
  * @author darionascimento
  */
-public class SlaveMain {
+public class SlaveMain extends
+        Thread {
     public static URI SLAVE_URI;
     private static Logger log = Logger.getLogger(SlaveMain.class);
     /** Minimum port of server */
@@ -31,7 +39,10 @@ public class SlaveMain {
 
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
+        startSlave();
+    }
 
+    public static void startSlave() throws IOException {
         int port = getFreePort();
         // TODO Get local IP
         String path = "http://localhost/";
@@ -43,12 +54,11 @@ public class SlaveMain {
         log.info("Starting slave....");
         SelectorThread threadSelector = createServer(SLAVE_URI);
         log.info("Client at " + SLAVE_URI);
-
-        log.info("Hit enter to stop it...");
-        System.in.read();
-        threadSelector.stopEndpoint();
+        //
+        // log.info("Hit enter to stop it...");
+        // System.in.read();
+        // threadSelector.stopEndpoint();
     }
-
 
 
 
@@ -61,8 +71,7 @@ public class SlaveMain {
      */
     public static SelectorThread createServer(URI uri) throws IOException {
         Map<String, String> initParams = new HashMap<String, String>();
-        initParams.put("com.sun.jersey.config.property.packages",
-                       "inesc.slave; inesc.share");
+        initParams.put("com.sun.jersey.config.property.packages", "inesc.slave; inesc.share");
         return GrizzlyWebContainerFactory.create(uri, initParams);
     }
 

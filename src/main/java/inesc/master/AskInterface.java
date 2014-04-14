@@ -1,8 +1,16 @@
+/*
+ * Author: Dario Nascimento (dario.nascimento@tecnico.ulisboa.pt)
+ * 
+ * Instituto Superior Tecnico - University of Lisbon - INESC-ID Lisboa
+ * Copyright (c) 2014 - All rights reserved
+ */
+
 package inesc.master;
 
 import inesc.shared.AppEvaluationProtos.AppRequest;
 import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
 import inesc.shared.AppEvaluationProtos.Parameter;
+
 
 
 
@@ -15,39 +23,44 @@ import inesc.shared.AppEvaluationProtos.Parameter;
  */
 public class AskInterface {
 
-    public static String baseURL = "http://localhost:8888";
+    public static String baseURL = "http://localhost:8080";
+    public static String JSON = "application/json";
 
     public static AppRequest getGoogle(int nExec) {
-        return AppRequest.newBuilder()
-                         .setType(ReqType.GET)
-                         .setNExec(nExec)
-                         .setUrl("http://google.at")
-                         .build();
+        return AppRequest.newBuilder().setType(ReqType.GET).setNExec(nExec).setUrl("http://google.at").build();
     }
 
-
+    /**
+     * Get homepage
+     * 
+     * @param nExec
+     * @return
+     */
     public static AppRequest getHomepage(int nExec) {
-        return AppRequest.newBuilder()
-                         .setType(ReqType.GET)
-                         .setNExec(nExec)
-                         .setUrl(baseURL + "/")
-                         .build();
+        return AppRequest.newBuilder().setType(ReqType.GET).setNExec(nExec).setUrl(baseURL + "/").build();
     }
 
+    /**
+     * Get New Question
+     * 
+     * @param nExec
+     * @return
+     */
     public static AppRequest getNewQuestion(int nExec) {
-        return AppRequest.newBuilder()
-                         .setType(ReqType.GET)
-                         .setNExec(nExec)
-                         .setUrl(baseURL + "/new-question")
-                         .build();
+        return AppRequest.newBuilder().setType(ReqType.GET).setNExec(nExec).setUrl(baseURL + "/new-question").build();
     }
 
 
-    public static AppRequest postNewQuestion(
-            int nExec,
-                String title,
-                String tags,
-                String text) {
+    /**
+     * Post new question
+     * 
+     * @param nExec
+     * @param title
+     * @param tags
+     * @param text
+     * @return
+     */
+    public static AppRequest postNewQuestion(int nExec, String title, String tags, String text) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
@@ -79,13 +92,21 @@ public class AskInterface {
     }
 
 
+    /**
+     * Post new Answer
+     * 
+     * @param nExec
+     * @param questionTitle
+     * @param text
+     * @return
+     */
     public static AppRequest postAnswer(int nExec, String questionTitle, String text) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/answer");
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/answer");
 
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
@@ -96,40 +117,28 @@ public class AskInterface {
 
 
 
-    public static AppRequest updateAnswer(
-            int nExec,
-                String questionTitle,
-                String answerID,
-                String text) {
+    public static AppRequest updateAnswer(int nExec, String questionTitle, String answerID, String text) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.PUT)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/answer");
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/answer");
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
     }
 
 
 
-    public static AppRequest deleteAnswer(
-            int nExec,
-                String questionTitle,
-                String answerID,
-                String text) {
+    public static AppRequest deleteAnswer(int nExec, String questionTitle, String answerID, String text) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.DELETE)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/answer");
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/answer");
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
     }
@@ -137,20 +146,14 @@ public class AskInterface {
 
     // ///////// comments ////////////////////
 
-    public static AppRequest postComment(
-            int nExec,
-                String questionTitle,
-                String answerID,
-                String text) {
+    public static AppRequest postComment(int nExec, String questionTitle, String answerID, String text) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/comment");
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/comment");
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
     }
@@ -168,14 +171,10 @@ public class AskInterface {
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.PUT)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/comment");
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("commentID")
-                                       .setValue(commentID));
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/comment");
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
+        builder.addParameters(Parameter.newBuilder().setKey("commentID").setValue(commentID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
     }
@@ -190,14 +189,10 @@ public class AskInterface {
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.DELETE)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/comment");
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("commentID")
-                                       .setValue(commentID));
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/comment");
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
+        builder.addParameters(Parameter.newBuilder().setKey("commentID").setValue(commentID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder.build();
     }
@@ -214,22 +209,15 @@ public class AskInterface {
         return vote(nExec, questionTitle, answerID, "down");
     }
 
-    public static AppRequest vote(
-            int nExec,
-                String questionTitle,
-                String answerID,
-                String orientation) {
+    public static AppRequest vote(int nExec, String questionTitle, String answerID, String orientation) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
                                                .setNExec(nExec)
-                                               .setUrl(baseURL + "/question/"
-                                                       + questionTitle + "/"
-                                                       + orientation);
+                                               .setContentType(JSON)
+                                               .setUrl(baseURL + "/question/" + questionTitle + "/" + orientation);
 
-        builder.addParameters(Parameter.newBuilder()
-                                       .setKey("answerID")
-                                       .setValue(answerID));
+        builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
         return builder.build();
     }
 
