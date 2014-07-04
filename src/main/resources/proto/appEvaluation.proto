@@ -3,6 +3,21 @@ package inesc;
 option java_package = "inesc.shared";
 option java_outer_classname = "AppEvaluationProtos";
 
+
+message FromMaster{
+	optional string filename = 1;
+	optional string destination = 2;
+	optional AppReqList reqListMsg = 3;
+	optional AppStartMsg startMsg = 4;
+}
+
+message ToMaster{
+	optional AppAck ackMsg = 1;
+	optional ReportAgregatedMsg reportMsg = 2;
+	optional SlaveID slaveId = 3;
+	optional bool registry = 4;
+}
+
 message Parameter{
 	required string key = 1;
 	required string value = 2;
@@ -21,7 +36,6 @@ message AppRequest {
 	required int32 nExec = 3;
 	repeated Parameter parameters = 4;
 	optional string contentType = 5;
-
 }
 
 message AppReqList {
@@ -29,7 +43,7 @@ message AppReqList {
   required int32 nClients = 2;
 }
 
-message AppResponse{
+message AppAck{
 	optional string text = 1;
 	enum ResStatus{
 		ERROR = 0;
@@ -67,7 +81,7 @@ message ReportAgregatedMsg{
 }
 
 
-message SlaveRegistryMsg{
-	required string url = 1;
+message SlaveID{
+	required string host = 1;
 	required int32 port = 2;
 }

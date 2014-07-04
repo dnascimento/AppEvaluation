@@ -5,13 +5,13 @@
  * Copyright (c) 2014 - All rights reserved
  */
 
-package inesc.slave;
+package inesc.slave.clients;
 
 
 import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
-import inesc.slave.reports.ThreadReport;
-import inesc.slave.server.Slave;
+import inesc.slave.Slave;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class ClientManager extends
     private ThreadReport[] clientReports;
     private CloseableHttpClient httpClient;
     private int id;
-    private final Slave slave;
+    public final Slave slave;
 
 
     public ClientManager(Slave slave) {
@@ -74,15 +74,18 @@ public class ClientManager extends
                                                           .setStaleConnectionCheckEnabled(true)
                                                           .build();
 
-        httpClient = HttpClients.custom()
-                                .setConnectionManager(cm)
-                                .setDefaultRequestConfig(defaultRequestConfig)
-                                .build();
+        httpClient = HttpClients.custom().setConnectionManager(cm).setDefaultRequestConfig(defaultRequestConfig).build();
         id = 0;
     }
 
+    public void newFile(File f, String targetHost) {
+        ClientThread thread = new ClientThreadFileBased(httpClient, id++, this, f, targetHost);
+        clientThreads.add(thread);
+        log.info("New Client using file " + f);
+    }
+
     public void newClient(HttpRequestBase[] history, short[] historyCounter) {
-        ClientThread thread = new ClientThread(httpClient, history, historyCounter, id++, this);
+        ClientThread thread = new ClientThreadRequestBased(httpClient, history, historyCounter, id++, this);
         clientThreads.add(thread);
         log.info("New Client with " + history.length + " requests");
     }
@@ -116,7 +119,8 @@ public class ClientManager extends
         }
         log.info("Clients done...");
 
-        slave.sendReportToMaster(clientReports);
+        if (slave != null)
+            slave.sendReportToMaster(clientReports);
         // Clean the threads and connections
         this.restart();
     }
@@ -141,4 +145,5 @@ public class ClientManager extends
             thread.setStartOptions(optList);
         }
     }
+
 }

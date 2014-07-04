@@ -1,0 +1,7 @@
+Testes:
+Quero registar x nós.
+Quero dizer: ficheiro x vai para o nó x
+Quero criar uma sequencia de accoes e depois dizer que nós vao executar essa sequencia.
+
+O slave abre um socket server e diz o port ao master e depois o master envia o ficheiro
+

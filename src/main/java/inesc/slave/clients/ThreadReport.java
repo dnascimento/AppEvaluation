@@ -5,9 +5,11 @@
  * Copyright (c) 2014 - All rights reserved
  */
 
-package inesc.slave.reports;
+package inesc.slave.clients;
 
 import inesc.shared.AppEvaluationProtos.ThreadReportMsg;
+
+import java.util.ArrayList;
 
 /**
  * Thread execution statistics
@@ -28,41 +30,36 @@ public class ThreadReport {
     public long dataReceived;
     public int clientId;
 
-    public ThreadReport(short[] historyCounter, int clientId) {
-        nTransactions = 0;
-        for (int i = 0; i < historyCounter.length; i++) {
-            nTransactions += historyCounter[i];
-        }
+
+
+    public ThreadReport(int totalTransactions,
+            int clientId,
+            ArrayList<Short> executionTimes,
+            long totalExecutionTime,
+            String reportString,
+            long dataReceived) {
+        this.nTransactions = totalTransactions;
         this.clientId = clientId;
-    }
-
-
-    public ThreadReport() {
-        // Empty constructor for casts
-    }
-
-
-    public void afterExecution(short[] executionTimes, long totalExecutionTime, String reportString, long dataReceived) {
         this.report = reportString;
         this.dataReceived = dataReceived;
         this.totalExecutionTime = totalExecutionTime;
-        longest = executionTimes[0];
-        shortest = executionTimes[0];
+        longest = executionTimes.get(0);
+        shortest = executionTimes.get(0);
         totalTransferingTime = 0;
         failTransactions = 0;
 
         for (int i = 0; i < nTransactions; i++) {
-            if (executionTimes[i] < 0) {
+            if (executionTimes.get(i) < 0) {
                 failTransactions++;
                 continue;
             }
-            if (longest < executionTimes[i]) {
-                longest = executionTimes[i];
+            if (longest < executionTimes.get(i)) {
+                longest = executionTimes.get(i);
             }
-            if (shortest > executionTimes[i]) {
-                shortest = executionTimes[i];
+            if (shortest > executionTimes.get(i)) {
+                shortest = executionTimes.get(i);
             }
-            totalTransferingTime += executionTimes[i];
+            totalTransferingTime += executionTimes.get(i);
         }
         successTransactions = nTransactions - failTransactions;
         if (successTransactions != 0)
@@ -71,6 +68,10 @@ public class ThreadReport {
             averageResponseTime = 0;
 
         transactionRate = ((double) nTransactions) / (totalExecutionTime / 1000);
+    }
+
+
+    public ThreadReport() {
     }
 
 
