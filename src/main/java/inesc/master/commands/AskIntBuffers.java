@@ -62,14 +62,22 @@ public class AskIntBuffers extends
      * @return
      */
     @Override
-    public AppRequest.Builder postNewQuestion(String serverURL, String title, String tags, String text, String author) {
+    public AppRequest.Builder postNewQuestion(
+            String serverURL,
+                String title,
+                String tags,
+                String text,
+                String author,
+                String views,
+                String answers) {
         AppRequest.Builder builder = AppRequest.newBuilder().setType(ReqType.POST).setUrl(serverURL + "/new-question");
 
         builder.addParameters(Parameter.newBuilder().setKey("title").setValue(title));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         builder.addParameters(Parameter.newBuilder().setKey("tags").setValue(tags));
         builder.addParameters(Parameter.newBuilder().setKey("author").setValue(author));
-
+        builder.addParameters(Parameter.newBuilder().setKey("views").setValue(views));
+        builder.addParameters(Parameter.newBuilder().setKey("answers").setValue(answers));
 
         return builder;
     }

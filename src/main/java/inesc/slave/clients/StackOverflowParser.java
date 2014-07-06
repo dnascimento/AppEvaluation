@@ -103,7 +103,7 @@ public class StackOverflowParser {
         String views = getProperty(question, "ViewCount");
         currentQuestionTitle = title;
         currentAnswerId = creator.generateAnswerId(currentQuestionTitle, AUTHOR, text);
-        return creator.postNewQuestion(hostURL, title, tags, text, AUTHOR);
+        return creator.postNewQuestion(hostURL, title, tags, text, AUTHOR, views, answers);
     }
 
 
@@ -137,13 +137,13 @@ public class StackOverflowParser {
 
     // only ASCII
     private static String escapeTitle(String title) {
-        return title.replaceAll("\\?|[^\\p{ASCII}]|\\.|\\\'", "");
+        return title.replaceAll(" $|/|;|,|\\?|[^\\p{ASCII}]|\\.|\\\'", "");
     }
 
     private static String escapeTags(String tags) {
         tags = StringEscapeUtils.unescapeHtml4(tags);
         tags = tags.replaceAll("><", ",");
-        tags = tags.replaceAll("<|>", "");
+        tags = tags.replaceAll("<|>|.", "");
         return tags;
     }
 

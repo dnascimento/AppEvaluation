@@ -160,6 +160,11 @@ abstract class ClientThread extends
 
 
     public void execRequest(HttpRequestBase req) {
+        try {
+            sleep(50);
+        } catch (InterruptedException e2) {
+            e2.printStackTrace();
+        }
         CloseableHttpResponse response;
         try {
             long start = System.currentTimeMillis();
@@ -198,6 +203,7 @@ abstract class ClientThread extends
 
         } catch (Exception e) {
             log.warn(e);
+            log.error(e);
             e.printStackTrace();
             executionTimes.add((short) -4);
         }

@@ -169,8 +169,15 @@ public class RequestCreation extends
 
 
     @Override
-    public HttpRequestBase postNewQuestion(String serverURL, String title, String tags, String text, String author) {
-        Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author);
+    public HttpRequestBase postNewQuestion(
+            String serverURL,
+                String title,
+                String tags,
+                String text,
+                String author,
+                String views,
+                String answers) {
+        Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author, "views", views, "answers", answers);
         return createPacket(serverURL + "/new-question", ReqType.POST, p, false);
     }
 

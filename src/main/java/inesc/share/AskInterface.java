@@ -56,7 +56,7 @@ public abstract class AskInterface<T> {
      * @param text
      * @return
      */
-    public abstract T postNewQuestion(String serverURL, String title, String tags, String text, String author);
+    public abstract T postNewQuestion(String serverURL, String title, String tags, String text, String author, String views, String answers);
 
     public abstract T deleteQuestion(String serverURL, String questionTitle);
 
@@ -99,10 +99,8 @@ public abstract class AskInterface<T> {
         try {
             title = new URLCodec().encode(title);
             md = MessageDigest.getInstance("MD5");
-            System.out.println("New answer: " + title + author + text);
             byte[] digest = md.digest((title + author + text).getBytes("UTF-16"));
-            String hashcode = BaseEncoding.base64().encode(digest);
-            return hashcode;
+            return BaseEncoding.base64().encode(digest);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
