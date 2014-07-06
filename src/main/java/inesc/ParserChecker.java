@@ -11,7 +11,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 
 public class ParserChecker {
     String filename;
-    RequestCreation creator;
+    RequestCreation creator = new RequestCreation();
 
     String currentQuestionTitle;
     String currentAnswerId;
@@ -32,7 +32,6 @@ public class ParserChecker {
             try {
                 String[] posts = line.split("<votes>");
                 String category = posts[0];
-                System.out.println("cat " + category);
                 int answerCount = 0;
                 // parse posts
                 for (int entryCounter = 1; entryCounter < posts.length; entryCounter++) {
@@ -63,6 +62,7 @@ public class ParserChecker {
                 }
                 correctFile.println(line);
             } catch (Exception e) {
+                System.err.println(e);
                 errorFile.println(line);
             }
         }

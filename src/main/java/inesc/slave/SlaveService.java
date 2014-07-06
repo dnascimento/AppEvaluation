@@ -47,10 +47,12 @@ public class SlaveService extends
 
 
         if (msgEnvelop.hasFilename()) {
+            log.info("New filename to exec: " + msgEnvelop.getFilename());
             slave.newFileToExec(msgEnvelop.getFilename(), msgEnvelop.getDestination(), s);
         }
 
         if (msgEnvelop.hasStartMsg()) {
+            log.info("Master asked to start...");
             AppStartMsg m2 = msgEnvelop.getStartMsg();
             slave.clientManager.setStartOptions(m2.getOptList());
             slave.clientManager.start();
@@ -61,7 +63,7 @@ public class SlaveService extends
             slave.clientManager.restart();
             int nRequests = reqList.getRequestsCount();
             int nClients = reqList.getNClients();
-            System.out.println("Got " + nRequests + " requests for " + nClients + " clients");
+            log.info("Got " + nRequests + " requests for " + nClients + " clients");
 
             HttpRequestBase[] history = new HttpRequestBase[nRequests];
             short[] historyCounter = new short[nRequests];

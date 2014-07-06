@@ -149,10 +149,9 @@ public class Slave {
             AppAck msg = AppAck.newBuilder().setStatus(ResStatus.ERROR).build();
             newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
             transferFile(f, s);
-            msg = AppAck.newBuilder().setStatus(ResStatus.OK).build();
-            newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-            clientManager.newFile(f, targetHost);
+            log.info("File transfered with success");
         }
+        clientManager.newFile(f, targetHost);
     }
 
     private void transferFile(File f, Socket s) {

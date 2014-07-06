@@ -57,6 +57,7 @@ public class ClientManager extends
     }
 
     public void restart() {
+
         clientThreads.clear();
         clientReports = null;
         /*

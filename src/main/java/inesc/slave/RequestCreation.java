@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.URLCodec;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
@@ -49,6 +51,7 @@ public class RequestCreation extends
     }
 
     private static HttpRequestBase createPacket(String url, ReqType type, Parameters parameters, boolean json) {
+
         HttpRequestBase request = null;
         try {
             if (parameters == null) {
@@ -156,57 +159,63 @@ public class RequestCreation extends
 
     @Override
     public HttpRequestBase getHomepage(String serverURL) {
-        return createPacket(serverURL, ReqType.GET, null, false);
+        return createPacket(serverURL + "/", ReqType.GET, null, false);
     }
 
     @Override
     public HttpRequestBase getNewQuestion(String serverURL) {
-        return createPacket(serverURL + "/newQuestion", ReqType.GET, null, false);
+        return createPacket(serverURL + "/new-question", ReqType.GET, null, false);
     }
 
 
     @Override
-    public HttpRequestBase postNewQuestion(String serverURL, String title, String tags, String text) {
-        Parameters p = new Parameters("title", title, "text", text, "tags", tags);
-        return createPacket(serverURL + "/newQuestion", ReqType.GET, p, false);
+    public HttpRequestBase postNewQuestion(String serverURL, String title, String tags, String text, String author) {
+        Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author);
+        return createPacket(serverURL + "/new-question", ReqType.POST, p, false);
     }
 
     @Override
     public HttpRequestBase deleteQuestion(String serverURL, String questionTitle) {
-        return createPacket(serverURL + "/question/" + questionTitle, ReqType.DELETE, null, false);
+        questionTitle = escapeText(questionTitle);
+        return createPacket(serverURL + "/question/" + questionTitle, ReqType.DELETE, null, true);
     }
 
 
     @Override
     public HttpRequestBase getQuestion(String serverURL, String questionTitle) {
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle, ReqType.GET, null, false);
     }
 
 
     @Override
     public HttpRequestBase postAnswer(String serverURL, String questionTitle, String text, String author) {
-        Parameters p = new Parameters("text", text);
+        Parameters p = new Parameters("text", text, "author", author);
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.POST, p, true);
     }
 
     @Override
     public HttpRequestBase updateAnswer(String serverURL, String questionTitle, String answerID, String text) {
         Parameters p = new Parameters("answerID", answerID, "text", text);
-        return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.POST, p, false);
+        questionTitle = escapeText(questionTitle);
+        return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.PUT, p, true);
     }
 
 
     @Override
     public HttpRequestBase deleteAnswer(String serverURL, String questionTitle, String answerID, String text) {
         Parameters p = new Parameters("answerID", answerID, "text", text);
-        return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.DELETE, p, false);
+        questionTitle = escapeText(questionTitle);
+        return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.DELETE, p, true);
     }
 
 
 
     @Override
-    public HttpRequestBase postComment(String serverURL, String questionTitle, String answerID, String text) {
-        Parameters p = new Parameters("answerID", answerID, "text", text);
+    public HttpRequestBase postComment(String serverURL, String questionTitle, String answerID, String text, String author) {
+        Parameters p = new Parameters("answerID", answerID, "text", text, "author", author);
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/comment", ReqType.POST, p, true);
     }
 
@@ -215,6 +224,7 @@ public class RequestCreation extends
     @Override
     public HttpRequestBase updateComment(String serverURL, String questionTitle, String answerID, String commentID, String text) {
         Parameters p = new Parameters("answerID", "commentID", commentID, answerID, "text", text);
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/comment", ReqType.PUT, p, true);
     }
 
@@ -223,6 +233,7 @@ public class RequestCreation extends
     @Override
     public HttpRequestBase deleteComment(String serverURL, String questionTitle, String answerID, String commentID) {
         Parameters p = new Parameters("answerID", answerID, "commentID", commentID);
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/comment", ReqType.DELETE, p, true);
     }
 
@@ -241,7 +252,19 @@ public class RequestCreation extends
 
     private HttpRequestBase vote(String serverURL, String questionTitle, String answerID, String orientation) {
         Parameters p = new Parameters("answerID", answerID);
+        questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/" + orientation, ReqType.POST, p, true);
+    }
+
+
+    private String escapeText(String text) {
+        URLCodec codec = new URLCodec();
+        try {
+            return codec.encode(text);
+        } catch (EncoderException e1) {
+            log.error(e1);
+            return text;
+        }
     }
 
 }

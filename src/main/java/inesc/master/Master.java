@@ -117,10 +117,10 @@ public class Master {
     public void start(StartOpt... logOptions) {
         for (InetSocketAddress nodeAddress : slavelist) {
             try {
+                log.info("Ordering node" + nodeAddress.getHostString() + ":" + nodeAddress.getPort() + " to start...");
                 Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
                 FromMaster msg = FromMaster.newBuilder().setStartMsg(AppStartMsg.newBuilder().addAllOpt(Arrays.asList(logOptions))).build();
                 msg.writeDelimitedTo(s.getOutputStream());
-
                 s.close();
             } catch (UnknownHostException e) {
                 log.error("Connection refused " + nodeAddress, e);
@@ -128,6 +128,7 @@ public class Master {
                 log.error("Connection refused " + nodeAddress, e);
             }
         }
+        log.info("All nodes started!");
     }
 
     private void sendFile(String filename, Socket s) throws Exception {
@@ -148,20 +149,17 @@ public class Master {
             }
             out.flush();
             log.info("100 %");
+            out.close();
         } catch (Exception e) {
             log.error(e);
         } finally {
             try {
                 fr.close();
             } catch (Exception e) {
-                log.error(e);
+
             }
         }
 
-        AppAck ack = ToMaster.parseDelimitedFrom(s.getInputStream()).getAckMsg();
-        if (ack.getStatus().equals(ResStatus.ERROR)) {
-            throw new Exception("Error retrieving the file");
-        }
     }
 
     /**

@@ -62,12 +62,14 @@ public class AskIntBuffers extends
      * @return
      */
     @Override
-    public AppRequest.Builder postNewQuestion(String serverURL, String title, String tags, String text) {
+    public AppRequest.Builder postNewQuestion(String serverURL, String title, String tags, String text, String author) {
         AppRequest.Builder builder = AppRequest.newBuilder().setType(ReqType.POST).setUrl(serverURL + "/new-question");
 
         builder.addParameters(Parameter.newBuilder().setKey("title").setValue(title));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         builder.addParameters(Parameter.newBuilder().setKey("tags").setValue(tags));
+        builder.addParameters(Parameter.newBuilder().setKey("author").setValue(author));
+
 
         return builder;
     }
@@ -137,7 +139,7 @@ public class AskIntBuffers extends
     // ///////// comments ////////////////////
 
     @Override
-    public AppRequest.Builder postComment(String serverURL, String questionTitle, String answerID, String text) {
+    public AppRequest.Builder postComment(String serverURL, String questionTitle, String answerID, String text, String author) {
 
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
@@ -145,6 +147,8 @@ public class AskIntBuffers extends
                                                .setUrl(serverURL + "/question/" + questionTitle + "/comment");
         builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
         builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
+        builder.addParameters(Parameter.newBuilder().setKey("author").setValue(author));
+
         return builder;
     }
 

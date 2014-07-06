@@ -104,7 +104,6 @@ abstract class ClientThread extends
         }
         // Store the report in controller to send later to master
         clientManager.addReport(clientID, report);
-
     }
 
     public void flushData() {
@@ -188,6 +187,11 @@ abstract class ClientThread extends
             executionTimes.add((short) -2);
 
         } catch (ConnectTimeoutException e) {
+            try {
+                sleep(500);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
             // unable to establish a connection
             log.warn("Connect Timeout Exception");
             executionTimes.add((short) -3);

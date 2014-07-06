@@ -7,8 +7,12 @@
 
 package inesc.share;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.URLCodec;
 
 import com.google.common.io.BaseEncoding;
 
@@ -52,7 +56,7 @@ public abstract class AskInterface<T> {
      * @param text
      * @return
      */
-    public abstract T postNewQuestion(String serverURL, String title, String tags, String text);
+    public abstract T postNewQuestion(String serverURL, String title, String tags, String text, String author);
 
     public abstract T deleteQuestion(String serverURL, String questionTitle);
 
@@ -76,7 +80,7 @@ public abstract class AskInterface<T> {
 
     // ///////// comments ////////////////////
 
-    public abstract T postComment(String serverURL, String questionTitle, String answerID, String text);
+    public abstract T postComment(String serverURL, String questionTitle, String answerID, String text, String author);
 
     public abstract T updateComment(String serverURL, String questionTitle, String answerID, String commentID, String text);
 
@@ -93,10 +97,17 @@ public abstract class AskInterface<T> {
     public String generateAnswerId(String title, String author, String text) {
         MessageDigest md;
         try {
+            title = new URLCodec().encode(title);
             md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest((title + author + text).getBytes());
-            return BaseEncoding.base64().encode(digest);
+            System.out.println("New answer: " + title + author + text);
+            byte[] digest = md.digest((title + author + text).getBytes("UTF-16"));
+            String hashcode = BaseEncoding.base64().encode(digest);
+            return hashcode;
         } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (EncoderException e) {
             e.printStackTrace();
         }
         return null;

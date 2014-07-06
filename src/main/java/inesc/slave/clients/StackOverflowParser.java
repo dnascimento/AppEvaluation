@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Logger;
 
@@ -20,6 +21,7 @@ public class StackOverflowParser {
     ClientThread client;
     final String hostURL;
 
+
     int totalRequests = 0;
 
     public StackOverflowParser(File f, String hostURL, ClientThread client) {
@@ -32,6 +34,7 @@ public class StackOverflowParser {
     public int parseFile() throws Exception {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
+        log.info("Parsing file: " + file.getAbsolutePath() + "...");
         while ((line = br.readLine()) != null) {
             try {
                 String[] posts = line.split("<votes>");
@@ -44,67 +47,65 @@ public class StackOverflowParser {
                     int votes = Integer.parseInt(entries[0].replace("</votes>  ", ""));
                     if (entryCounter == 1) {
                         String question = entries[1];
-                        // answerCount = client.execRequest(newQuestion(question));
                         client.execRequest(newQuestion(question));
                         totalRequests++;
                     } else {
                         String answer = entries[1];
-                        // TODO author?
-                        client.execRequest(newAnswer(answer, "author"));
+                        client.execRequest(newAnswer(answer));
                         totalRequests++;
-                        // answerCount--;
                     }
-                    client.execRequest(newVote(votes));
-                    totalRequests++;
+                    newVote(votes);
                     for (int j = 2; j < entries.length; j++) {
                         String comment = entries[j];
                         client.execRequest(newComment(comment));
                         totalRequests++;
                     }
                 }
-                // if (answerCount != 0) {
-                // System.out.println(line);
-                // throw new Exception("WRONG NUMBER OF ANSWERS: " + answerCount);
-                // }
             } catch (Exception e) {
+                log.error(line);
                 log.error(e);
             }
         }
         br.close();
+        log.info("File parsing over: " + file.getAbsolutePath());
         return totalRequests;
     }
 
     private HttpRequestBase newComment(String comment) throws Exception {
         comment = comment.substring(0, comment.length() - 4);
         String text = getProperty(comment, "Text");
-        return creator.postComment(hostURL, currentQuestionTitle, currentAnswerId, text);
+        return creator.postComment(hostURL, currentQuestionTitle, currentAnswerId, text, AUTHOR);
     }
 
 
-    private HttpRequestBase newVote(int votes) {
-        return creator.voteUp(hostURL, currentQuestionTitle, currentAnswerId);
+    private void newVote(int votes) {
+        for (int i = 0; i < votes; i++) {
+            client.execRequest(creator.voteUp(hostURL, currentQuestionTitle, currentAnswerId));
+            totalRequests++;
+        }
     }
 
-    private HttpRequestBase newAnswer(String answer, String author) throws Exception {
+    private HttpRequestBase newAnswer(String answer) throws Exception {
         // String tags = getProperty(answer,"CreationDate");
         // String score = getProperty(answer, "Score");
         String text = getProperty(answer, "Body");
-        currentAnswerId = creator.generateAnswerId(currentQuestionTitle, author, answer);
-        return creator.postAnswer(hostURL, currentQuestionTitle, text, author);
+        currentAnswerId = creator.generateAnswerId(currentQuestionTitle, AUTHOR, text);
+        return creator.postAnswer(hostURL, currentQuestionTitle, text, AUTHOR);
     }
 
     private HttpRequestBase newQuestion(String question) throws Exception {
         // String tags = getProperty(question,"CreationDate");
         // String score = getProperty(question, "Score");
-        String tags = getProperty(question, "Tags");
+        String tags = escapeTags(getProperty(question, "Tags"));
         String text = getProperty(question, "Body");
-        String title = getProperty(question, "Title");
+        String title = escapeTitle(getProperty(question, "Title"));
         String answers = getProperty(question, "AnswerCount");
         String views = getProperty(question, "ViewCount");
-
         currentQuestionTitle = title;
-        return creator.postNewQuestion(hostURL, title, tags, text);
+        currentAnswerId = creator.generateAnswerId(currentQuestionTitle, AUTHOR, text);
+        return creator.postNewQuestion(hostURL, title, tags, text, AUTHOR);
     }
+
 
     public static void main(String[] args) throws Exception {
         File dir = new File("/Volumes/DataDisk/data");
@@ -117,7 +118,6 @@ public class StackOverflowParser {
     }
 
     private static String getProperty(String line, String property) throws Exception {
-
         int start = line.indexOf(property + "=\"");
         if (start == -1) {
             throw new Exception("Property not found");
@@ -135,6 +135,17 @@ public class StackOverflowParser {
         return line.substring(start, i);
     }
 
+    // only ASCII
+    private static String escapeTitle(String title) {
+        return title.replaceAll("\\?|[^\\p{ASCII}]|\\.|\\\'", "");
+    }
+
+    private static String escapeTags(String tags) {
+        tags = StringEscapeUtils.unescapeHtml4(tags);
+        tags = tags.replaceAll("><", ",");
+        tags = tags.replaceAll("<|>", "");
+        return tags;
+    }
 
 
 }

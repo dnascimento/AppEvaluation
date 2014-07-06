@@ -1,6 +1,7 @@
 package inesc.slave.clients;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -32,7 +33,15 @@ public class ClientThreadFileBased extends
             log.error(e);
         }
         collectStatistics();
+        try {
+            httpClient.close();
+        } catch (IOException e) {
+            log.error(e);
+        }
     }
+
+
+
 
 
 }

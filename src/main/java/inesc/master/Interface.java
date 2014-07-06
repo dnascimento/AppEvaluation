@@ -54,14 +54,19 @@ public class Interface extends
 
         while (true) {
             try {
-                System.out.println("a) Start stories");
+                System.out.println("a) Add new story");
                 System.out.println("b) Send file");
-                System.out.println("c) Add new story");
+                System.out.println("c) Start stories");
                 cmd = s.next();
 
                 switch (cmd.charAt(0)) {
                 case 'a':
-                    master.start(StartOpt.Disk);
+                    // Send the request list using puppet
+                    AppReqList story = newStory(s);
+                    if (story == null)
+                        continue;
+                    nodes = selectNodes(s);
+                    master.sendRequest(story, nodes);
                     break;
                 case 'b':
                     System.out.println("Enter the file name");
@@ -70,10 +75,7 @@ public class Interface extends
                     master.sendFileName(filename, nodes, SERVER_URL);
                     break;
                 case 'c':
-                    // Send the request list using puppet
-                    AppReqList story = newStory(s);
-                    nodes = selectNodes(s);
-                    master.sendRequest(story, nodes);
+                    master.start(StartOpt.Disk);
                     break;
                 }
             } catch (Exception e) {
@@ -99,7 +101,7 @@ public class Interface extends
             switch (cmd.charAt(0)) {
             case 'a':
                 lastTitle = getTitle();
-                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText).setNExec(nNodes).build();
+                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText, AUTHOR).setNExec(nNodes).build();
                 System.out.println("New question");
                 break;
             case 'b':
@@ -108,13 +110,13 @@ public class Interface extends
                 System.out.println("New answer");
                 break;
             case 'c':
-                req = bufferCreator.postComment(SERVER_URL, lastTitle, lastAnswerId, randomText).setNExec(nNodes).build();
+                req = bufferCreator.postComment(SERVER_URL, lastTitle, lastAnswerId, randomText, AUTHOR).setNExec(nNodes).build();
                 System.out.println("New comment");
                 break;
             case 'e':
                 return story.build(nNodes);
             default:
-                continue;
+                return null;
             }
             story.addRequest(req);
         }
