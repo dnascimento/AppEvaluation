@@ -100,7 +100,9 @@ public abstract class AskInterface<T> {
             title = new URLCodec().encode(title);
             md = MessageDigest.getInstance("MD5");
             byte[] digest = md.digest((title + author + text).getBytes("UTF-16"));
-            return BaseEncoding.base64().encode(digest);
+            String hashtag = BaseEncoding.base64().encode(digest);
+            System.out.println(hashtag + ":" + title + author + text);
+            return hashtag;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {

@@ -143,9 +143,8 @@ public class StackOverflowParser {
     private static String escapeTags(String tags) {
         tags = StringEscapeUtils.unescapeHtml4(tags);
         tags = tags.replaceAll("><", ",");
-        tags = tags.replaceAll("<|>|.", "");
+        tags = tags.replaceAll("<|>|\\.", "");
         return tags;
     }
-
 
 }
