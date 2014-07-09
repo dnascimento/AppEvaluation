@@ -58,7 +58,7 @@ public class Master {
 
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
-        log.info("Starting Master" + MASTER_ADDRESS.getPort() + "....");
+        log.info("Starting Master " + MASTER_ADDRESS.getPort() + "....");
         new Master();
         log.info("Waiting for slaves registry..");
         log.info("Hit stop the server...");

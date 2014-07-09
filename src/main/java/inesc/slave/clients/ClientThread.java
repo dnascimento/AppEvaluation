@@ -173,6 +173,11 @@ abstract class ClientThread extends
             executionTimes.add((short) duration);
             HttpEntity entity = response.getEntity();
             if (entity != null) {
+                // BufferedReader content = new BufferedReader(new
+                // InputStreamReader(entity.getContent()));
+                // String line;
+                // while ((line = content.readLine()) != null)
+                // System.out.println(line);
                 ByteBuffer resp = ByteBuffer.wrap(EntityUtils.toByteArray(entity));
                 responseData.add(resp);
                 dataReceived += resp.capacity();
@@ -209,5 +214,4 @@ abstract class ClientThread extends
         }
 
     }
-
 }

@@ -38,7 +38,7 @@ public class Interface extends
     String tags = "ist";
     String AUTHOR = "interface_author";
     private int lorumPosition = 0;
-    private final String SERVER_URL = "http://localhost:8080";
+    private final String SERVER_URL = "http://localhost:9000";
 
     public Interface(Master master) {
         this.master = master;

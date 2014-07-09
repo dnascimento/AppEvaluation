@@ -71,7 +71,7 @@ public class SlaveService extends
             for (AppRequest req : reqList.getRequestsList()) {
                 try {
                     history[i] = RequestCreation.convertReqBufferToHTTPRequest(req);
-                    System.out.println(history[i]);
+                    log.info(history[i]);
                     historyCounter[i] = (short) req.getNExec();
                     i++;
                 } catch (UnsupportedEncodingException e) {

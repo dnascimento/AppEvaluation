@@ -27,8 +27,8 @@ public class Slave {
     private static Logger log = Logger.getLogger(Slave.class);
 
     private final String BASE_DIR = "slave/";
-    private final InetSocketAddress masterAddress;
-    public final InetSocketAddress myAddress;
+    private InetSocketAddress masterAddress;
+    public InetSocketAddress myAddress;
 
     /** Minimum port of server */
     private final static int PORT_RANGE_MIN = 9000;
@@ -48,16 +48,31 @@ public class Slave {
         new SlaveService(this).start();
         clientManager = new ClientManager(this);
         register();
-        log.info("Starting slave at port" + port + "....");
+        log.info("Starting slave at port " + port + "....");
+    }
+
+
+    Slave(String fileToExec, String targetHost) {
+        clientManager = new ClientManager(this);
+        File f = new File(BASE_DIR + fileToExec);
+        clientManager.newFile(f, targetHost);
+        clientManager.start();
     }
 
 
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
-        new Slave();
+        if (args.length == 0) {
+            new Slave();
+            return;
+        }
+
+        if (args.length != 2) {
+            log.error("Must provide the filename and target");
+            return;
+        }
+        new Slave(args[0], args[1]);
     }
-
-
 
     /**
      * Register slave on master
@@ -81,17 +96,19 @@ public class Slave {
      * Send the reports to master
      */
     public void sendReportToMaster(ThreadReport[] clientReports) {
-        try {
-            Socket s = new Socket(masterAddress.getAddress(), masterAddress.getPort());
-            ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
-            for (int i = 0; i < clientReports.length; i++) {
-                bd.addReports(clientReports[i].toProtBuffer());
+        if (masterAddress != null) {
+            try {
+                Socket s = new Socket(masterAddress.getAddress(), masterAddress.getPort());
+                ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
+                for (int i = 0; i < clientReports.length; i++) {
+                    bd.addReports(clientReports[i].toProtBuffer());
+                }
+                ReportAgregatedMsg msg = bd.build();
+                newToMaster().setReportMsg(msg).build().writeDelimitedTo(s.getOutputStream());
+                s.close();
+            } catch (Exception e) {
+                log.error(e);
             }
-            ReportAgregatedMsg msg = bd.build();
-            newToMaster().setReportMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-            s.close();
-        } catch (Exception e) {
-            log.error(e);
         }
         showReports(clientReports);
         clientManager = new ClientManager(this);

@@ -39,7 +39,7 @@ public class StackOverflowParser {
             try {
                 String[] posts = line.split("<votes>");
                 String category = posts[0];
-                System.out.println("cat " + category);
+                log.info("cat " + category);
                 // parse posts
                 for (int entryCounter = 1; entryCounter < posts.length; entryCounter++) {
                     String postWithComments = posts[entryCounter];
