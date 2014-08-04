@@ -20,6 +20,7 @@ import com.google.common.io.BaseEncoding;
 
 
 
+
 /**
  * Generate request to Invoke the website (Highest level API)
  * The output is a protocol buffer to avoid cast to and from.
@@ -112,4 +113,5 @@ public abstract class AskInterface<T> {
         }
         return null;
     }
+
 }

@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 /**
  * Individual whose perform resquests on server
  */
-abstract class ClientThread extends
+public abstract class ClientThread extends
         Thread {
     static Logger log = Logger.getLogger(ClientThread.class);
     protected CloseableHttpClient httpClient;
@@ -63,7 +63,7 @@ abstract class ClientThread extends
     /** Bytes received counter */
     private long dataReceived = 0;
 
-    int totalRequests;
+    long totalRequests;
 
     long startExecution;
 

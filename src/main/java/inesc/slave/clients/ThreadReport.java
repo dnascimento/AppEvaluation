@@ -17,14 +17,14 @@ import java.util.ArrayList;
  * @author darionascimento
  */
 public class ThreadReport {
-    public int nTransactions;
-    public int successTransactions;
+    public long nTransactions;
+    public long successTransactions;
     public int averageResponseTime;
     public double transactionRate;
     public short longest;
     public short shortest;
     public int totalTransferingTime;
-    public int failTransactions;
+    public long failTransactions;
     public String report;
     public long totalExecutionTime;
     public long dataReceived;
@@ -32,7 +32,7 @@ public class ThreadReport {
 
 
 
-    public ThreadReport(int totalTransactions,
+    public ThreadReport(long totalTransactions,
             int clientId,
             ArrayList<Short> executionTimes,
             long totalExecutionTime,
@@ -63,7 +63,7 @@ public class ThreadReport {
         }
         successTransactions = nTransactions - failTransactions;
         if (successTransactions != 0)
-            averageResponseTime = totalTransferingTime / successTransactions;
+            averageResponseTime = (int) (totalTransferingTime / successTransactions);
         else
             averageResponseTime = 0;
 

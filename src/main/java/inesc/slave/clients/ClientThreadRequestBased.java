@@ -29,8 +29,8 @@ public class ClientThreadRequestBased extends
             totalRequests += historyCounter[i];
         }
 
-        executionTimes = new ArrayList<Short>(totalRequests);
-        responseData = new ArrayList<ByteBuffer>(totalRequests);
+        executionTimes = new ArrayList<Short>((int) totalRequests);
+        responseData = new ArrayList<ByteBuffer>((int) totalRequests);
     }
 
     /**

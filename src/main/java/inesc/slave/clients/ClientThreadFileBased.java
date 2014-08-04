@@ -1,5 +1,9 @@
 package inesc.slave.clients;
 
+import inesc.slave.parsers.ParsePerDay;
+import inesc.slave.parsers.ParsePerTopic;
+import inesc.slave.parsers.StackOverflowParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,8 +18,11 @@ public class ClientThreadFileBased extends
 
     public ClientThreadFileBased(CloseableHttpClient httpClient, int clientId, ClientManager clientManager, File f, String targetHost) {
         super(httpClient, clientId, clientManager);
-        parser = new StackOverflowParser(f, targetHost, this);
-
+        if (f.getName().contains("Day")) {
+            parser = new ParsePerDay(f, targetHost, this);
+        } else {
+            parser = new ParsePerTopic(f, targetHost, this);
+        }
         executionTimes = new ArrayList<Short>();
         responseData = new ArrayList<ByteBuffer>();
     }
@@ -29,6 +36,7 @@ public class ClientThreadFileBased extends
         log.info("Client" + clientID + "starting...");
         try {
             totalRequests = parser.parseFile();
+            log.info("Total requests: " + totalRequests);
         } catch (Exception e) {
             log.error(e);
         }

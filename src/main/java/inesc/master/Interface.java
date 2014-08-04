@@ -122,6 +122,7 @@ public class Interface extends
         }
     }
 
+
     private String getRandomText() {
         String txt = loremIpsum.getWords(RANDOM_TEXT_SIZE, lorumPosition);
         lorumPosition += RANDOM_TEXT_SIZE;
