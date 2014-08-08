@@ -57,7 +57,15 @@ public abstract class AskInterface<T> {
      * @param text
      * @return
      */
-    public abstract T postNewQuestion(String serverURL, String title, String tags, String text, String author, String views, String answers);
+    public abstract T postNewQuestion(
+            String serverURL,
+                String title,
+                String tags,
+                String text,
+                String author,
+                String views,
+                String answers,
+                String answerId);
 
     public abstract T deleteQuestion(String serverURL, String questionTitle);
 
@@ -71,7 +79,7 @@ public abstract class AskInterface<T> {
      * @param text
      * @return
      */
-    public abstract T postAnswer(String serverURL, String questionTitle, String text, String author);
+    public abstract T postAnswer(String serverURL, String questionTitle, String text, String author, String answerId);
 
 
 

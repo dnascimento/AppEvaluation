@@ -69,7 +69,8 @@ public class AskIntBuffers extends
                 String text,
                 String author,
                 String views,
-                String answers) {
+                String answers,
+                String answerId) {
         AppRequest.Builder builder = AppRequest.newBuilder().setType(ReqType.POST).setUrl(serverURL + "/new-question");
 
         builder.addParameters(Parameter.newBuilder().setKey("title").setValue(title));
@@ -103,7 +104,7 @@ public class AskIntBuffers extends
      * @return
      */
     @Override
-    public AppRequest.Builder postAnswer(String serverURL, String questionTitle, String text, String author) {
+    public AppRequest.Builder postAnswer(String serverURL, String questionTitle, String text, String author, String answerId) {
         AppRequest.Builder builder = AppRequest.newBuilder()
                                                .setType(ReqType.POST)
                                                .setContentType(JSON)

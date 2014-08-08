@@ -31,9 +31,9 @@ public class Slave {
     public InetSocketAddress myAddress;
 
     /** Minimum port of server */
-    private final static int PORT_RANGE_MIN = 9000;
+    private static final int PORT_RANGE_MIN = 9000;
     /** Max port of server */
-    private final static int PORT_RANGE_MAX = 9200;
+    private static final int PORT_RANGE_MAX = 9200;
     private static int K = 1024;
 
 

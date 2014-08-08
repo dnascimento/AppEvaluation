@@ -176,8 +176,10 @@ public class RequestCreation extends
                 String text,
                 String author,
                 String views,
-                String answers) {
-        Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author, "views", views, "answers", answers);
+                String answers,
+                String answerId) {
+        Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author, "views", views, "answers", answers,
+                "answerId", answerId);
         return createPacket(serverURL + "/new-question", ReqType.POST, p, false);
     }
 
@@ -196,8 +198,8 @@ public class RequestCreation extends
 
 
     @Override
-    public HttpRequestBase postAnswer(String serverURL, String questionTitle, String text, String author) {
-        Parameters p = new Parameters("text", text, "author", author);
+    public HttpRequestBase postAnswer(String serverURL, String questionTitle, String text, String author, String answerId) {
+        Parameters p = new Parameters("text", text, "author", author, "answerId", answerId);
         questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.POST, p, true);
     }

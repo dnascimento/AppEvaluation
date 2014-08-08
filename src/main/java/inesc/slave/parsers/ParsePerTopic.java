@@ -31,8 +31,9 @@ public class ParsePerTopic extends
             try {
                 int start = line.indexOf('<');
                 if (start != 0) {
+                    String category = line.substring(0, start);
                     // new question
-                    execRequest(newQuestion(line.substring(start)));
+                    execRequest(newQuestion(line.substring(start), category));
                 } else {
                     char type = line.toCharArray()[1];
                     switch (type) {
@@ -61,6 +62,6 @@ public class ParsePerTopic extends
         }
         br.close();
         log.fatal(summary());
-        return votesStat + questionsStat + answersStat + commentsStat;
+        return stats.total();
     }
 }

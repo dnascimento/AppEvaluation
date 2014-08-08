@@ -1,0 +1,30 @@
+FATAL [main][ParsePerTopic.java:64]: Total categories: 16429
+Total tags: 1268
+Total Questios: 16429
+Total Answers: 29169
+Total Comments: 68683
+Total Votes: 232496
+
+
+Total Char Answers: 28462587
+Total Char Comments: 13277154
+
+
+Oldest: Thu Sep 10 00:53:49 WEST 2009(1252540429883)
+Newest: Sun May 04 00:56:29 WEST 2014(1399161389150)
+Diff millisecounds: 146620959267
+
+
+Total viewsPerDay : 90988 avg: 5.0 desvio: 28.478061731796284
+Total viewsPerQuestion : 41102571 avg: 2501.0 desvio: 7519.619538247929
+Total tagsPerQuestion : 39965 avg: 2.0 desvio: 1.0
+Total answersPerQuestion : 29169 avg: 1.0 desvio: 1.7320508075688772
+Total commentsPerAnswer : 68683 avg: 2.0 desvio: 3.0
+
+
+
+Total votesPerAnswer : 232496 avg: 7.0 desvio: 10.535653752852738
+Total charsPerAnswer : 28462587 avg: 975.0 desvio: 1076.5402918609225
+Total charsPerComment : 13277154 avg: 193.0 desvio: 139.5564401953561
+Total charsPerQuestion : 12662572 avg: 770.0 desvio: 793.3416666228997
+Duration (ms): 5935

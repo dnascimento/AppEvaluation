@@ -47,7 +47,7 @@ public class ParsePerDay extends
                     execRequest(newComment(line));
                     break;
                 case 'q':
-                    execRequest(newQuestion(line));
+                    execRequest(newQuestion(line, ""));
                     break;
                 case '/':
                     // end;
@@ -59,11 +59,12 @@ public class ParsePerDay extends
             } catch (Exception e) {
                 log.error(line);
                 log.error(e);
+                e.printStackTrace();
             }
         }
         br.close();
         log.fatal(summary());
-        return votesStat + questionsStat + answersStat + commentsStat;
+        return stats.total();
     }
 
 }

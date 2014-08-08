@@ -39,6 +39,7 @@ public class ClientThreadFileBased extends
             log.info("Total requests: " + totalRequests);
         } catch (Exception e) {
             log.error(e);
+            e.printStackTrace();
         }
         collectStatistics();
         try {

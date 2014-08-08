@@ -101,11 +101,13 @@ public class Interface extends
             switch (cmd.charAt(0)) {
             case 'a':
                 lastTitle = getTitle();
-                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText, AUTHOR, "1", "1").setNExec(nNodes).build();
+                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText, AUTHOR, "1", "1", null)
+                                   .setNExec(nNodes)
+                                   .build();
                 System.out.println("New question");
                 break;
             case 'b':
-                req = bufferCreator.postAnswer(SERVER_URL, lastTitle, randomText, AUTHOR).setNExec(nNodes).build();
+                req = bufferCreator.postAnswer(SERVER_URL, lastTitle, randomText, AUTHOR, null).setNExec(nNodes).build();
                 lastAnswerId = bufferCreator.generateAnswerId(lastTitle, AUTHOR, randomText);
                 System.out.println("New answer");
                 break;

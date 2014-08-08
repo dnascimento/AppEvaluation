@@ -48,7 +48,7 @@ public class ThreadReport {
         totalTransferingTime = 0;
         failTransactions = 0;
 
-        for (int i = 0; i < nTransactions; i++) {
+        for (int i = 0; i < executionTimes.size(); i++) {
             if (executionTimes.get(i) < 0) {
                 failTransactions++;
                 continue;
@@ -61,6 +61,7 @@ public class ThreadReport {
             }
             totalTransferingTime += executionTimes.get(i);
         }
+
         successTransactions = nTransactions - failTransactions;
         if (successTransactions != 0)
             averageResponseTime = (int) (totalTransferingTime / successTransactions);
