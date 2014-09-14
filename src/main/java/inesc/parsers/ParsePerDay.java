@@ -1,18 +1,19 @@
-package inesc.slave.parsers;
+package inesc.parsers;
 
 import inesc.slave.clients.ClientThread;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.net.URL;
 
 import org.apache.log4j.Logger;
 
 public class ParsePerDay extends
         StackOverflowParser {
 
-    public ParsePerDay(File f, String hostURL, ClientThread client) {
-        super(f, hostURL, client);
+    public ParsePerDay(File f, URL targetHost, ClientThread client) {
+        super(f, targetHost, client);
     }
 
     private static Logger log = Logger.getLogger(ParsePerDay.class);

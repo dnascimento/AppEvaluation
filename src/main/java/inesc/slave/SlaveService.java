@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.Arrays;
 
 import org.apache.http.client.methods.HttpRequestBase;
@@ -48,7 +49,7 @@ public class SlaveService extends
 
         if (msgEnvelop.hasFilename()) {
             log.info("New filename to exec: " + msgEnvelop.getFilename());
-            slave.newFileToExec(msgEnvelop.getFilename(), msgEnvelop.getDestination(), s);
+            slave.newFileToExec(msgEnvelop.getFilename(), new URL(msgEnvelop.getDestination()), s);
         }
 
         if (msgEnvelop.hasStartMsg()) {
@@ -81,7 +82,7 @@ public class SlaveService extends
             // create the clients
             for (i = 0; i < nClients; i++) {
                 short[] counter = Arrays.copyOf(historyCounter, historyCounter.length);
-                slave.clientManager.newClient(history, counter);
+                slave.clientManager.newClient(history, counter, new URL(msgEnvelop.getDestination()));
             }
         }
 

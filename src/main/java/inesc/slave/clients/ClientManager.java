@@ -12,15 +12,11 @@ import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.slave.Slave;
 
 import java.io.File;
-import java.io.IOException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -46,7 +42,6 @@ public class ClientManager extends
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
     private ThreadReport[] clientReports;
-    private CloseableHttpClient httpClient;
     private int id;
     public final Slave slave;
 
@@ -60,33 +55,17 @@ public class ClientManager extends
 
         clientThreads.clear();
         clientReports = null;
-        /*
-         * Perform explicit garbage collection to remove old client threads and reports.
-         * System.gc();
-         */
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        cm.setMaxTotal(MAX_CONNECTIONS_TOTAL);
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
-
-        RequestConfig defaultRequestConfig = RequestConfig.custom()
-                                                          .setSocketTimeout(SOCKET_TIMEOUT)
-                                                          .setConnectTimeout(CONNECTION_TIMEOUT)
-                                                          .setConnectionRequestTimeout(REQUEST_TIMEOUT)
-                                                          .setStaleConnectionCheckEnabled(true)
-                                                          .build();
-
-        httpClient = HttpClients.custom().setConnectionManager(cm).setDefaultRequestConfig(defaultRequestConfig).build();
         id = 0;
     }
 
-    public void newFile(File f, String targetHost) {
-        ClientThread thread = new ClientThreadFileBased(httpClient, id++, this, f, targetHost);
+    public void newFile(File f, URL targetHost) {
+        ClientThread thread = new ClientThreadFileBased(id++, this, f, targetHost);
         clientThreads.add(thread);
         log.info("New Client using file " + f);
     }
 
-    public void newClient(HttpRequestBase[] history, short[] historyCounter) {
-        ClientThread thread = new ClientThreadRequestBased(httpClient, history, historyCounter, id++, this);
+    public void newClient(HttpRequestBase[] history, short[] historyCounter, URL targetURL) {
+        ClientThread thread = new ClientThreadRequestBased(history, historyCounter, id++, this, targetURL);
         clientThreads.add(thread);
         log.info("New Client with " + history.length + " requests");
     }
@@ -96,6 +75,11 @@ public class ClientManager extends
      */
     @Override
     public void run() {
+        runSync();
+    }
+
+
+    public void runSync() {
         clientReports = new ThreadReport[id];
         log.info("Starting " + clientThreads.size() + "Clients....");
 
@@ -113,11 +97,6 @@ public class ClientManager extends
             }
         }
 
-        try {
-            httpClient.close();
-        } catch (IOException e) {
-            log.error("Error closing HTTP Client" + e);
-        }
         log.info("Clients done...");
 
         if (slave != null)
@@ -125,7 +104,6 @@ public class ClientManager extends
         // Clean the threads and connections
         this.restart();
     }
-
 
 
     /**

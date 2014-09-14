@@ -78,7 +78,8 @@ public class RequestCreation extends
                 HttpPost post = new HttpPost(url);
                 if (json) {
                     post.setHeader("Content-Type", JSON);
-                    post.setEntity(parametersToJson(parameters));
+                    StringEntity entity = parametersToJson(parameters);
+                    post.setEntity(entity);
                 } else {
                     post.setEntity(new UrlEncodedFormEntity(parameters.build()));
                 }
@@ -178,9 +179,12 @@ public class RequestCreation extends
                 String views,
                 String answers,
                 String answerId) {
+
+
         Parameters p = new Parameters("title", title, "text", text, "tags", tags, "author", author, "views", views, "answers", answers,
                 "answerId", answerId);
-        return createPacket(serverURL + "/new-question", ReqType.POST, p, false);
+        title = escapeText(title);
+        return createPacket(serverURL + "/new-question/" + title, ReqType.POST, p, false);
     }
 
     @Override
@@ -199,7 +203,7 @@ public class RequestCreation extends
 
     @Override
     public HttpRequestBase postAnswer(String serverURL, String questionTitle, String text, String author, String answerId) {
-        Parameters p = new Parameters("text", text, "author", author, "answerId", answerId);
+        Parameters p = new Parameters("author", author, "answerId", answerId, "text", text);
         questionTitle = escapeText(questionTitle);
         return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.POST, p, true);
     }

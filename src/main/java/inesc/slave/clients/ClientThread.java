@@ -10,6 +10,9 @@ package inesc.slave.clients;
 import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Path;
@@ -18,15 +21,26 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpEntity;
+import org.apache.http.ConnectionReuseStrategy;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.NoHttpResponseException;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.http.impl.DefaultBHttpClientConnection;
+import org.apache.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.protocol.HttpProcessor;
+import org.apache.http.protocol.HttpProcessorBuilder;
+import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.protocol.RequestConnControl;
+import org.apache.http.protocol.RequestContent;
+import org.apache.http.protocol.RequestExpectContinue;
+import org.apache.http.protocol.RequestTargetHost;
+import org.apache.http.protocol.RequestUserAgent;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
@@ -36,8 +50,6 @@ import org.apache.log4j.Logger;
 public abstract class ClientThread extends
         Thread {
     static Logger log = Logger.getLogger(ClientThread.class);
-    protected CloseableHttpClient httpClient;
-    private final HttpContext context;
 
     /** Client unique ID */
     protected int clientID;
@@ -61,7 +73,7 @@ public abstract class ClientThread extends
     protected ClientManager clientManager;
 
     /** Bytes received counter */
-    private long dataReceived = 0;
+    private final long dataReceived = 0;
 
     long totalRequests;
 
@@ -73,9 +85,30 @@ public abstract class ClientThread extends
     /** Flag to flush or not the responses */
     private boolean diskLog = false;
 
-    ClientThread(CloseableHttpClient httpClient, int clientID, ClientManager clientManager) {
-        context = new BasicHttpContext();
-        this.httpClient = httpClient;
+    private final DefaultBHttpClientConnection conn;
+    private final HttpRequestExecutor httpexecutor;
+    private final ConnectionReuseStrategy connStrategy;
+    private final HttpHost host;
+    private final HttpCoreContext coreContext;
+    private final HttpProcessor httpproc;
+
+    ClientThread(int clientId, URL targetHost, ClientManager clientManager) {
+        httpproc = HttpProcessorBuilder.create()
+                                       .add(new RequestContent())
+                                       .add(new RequestTargetHost())
+                                       .add(new RequestConnControl())
+                                       .add(new RequestUserAgent("Shuttle/1.1"))
+                                       .add(new RequestExpectContinue(true))
+                                       .build();
+
+        httpexecutor = new HttpRequestExecutor();
+        coreContext = HttpCoreContext.create();
+        host = new HttpHost(targetHost.getHost(), targetHost.getPort());
+        coreContext.setTargetHost(host);
+        conn = new DefaultBHttpClientConnection(8 * 1024);
+        connStrategy = DefaultConnectionReuseStrategy.INSTANCE;
+
+        this.clientID = clientId;
         this.clientManager = clientManager;
     }
 
@@ -158,37 +191,50 @@ public abstract class ClientThread extends
     }
 
 
+    private HttpResponse execute(HttpRequestBase request) throws UnknownHostException, IOException, HttpException {
+        if (!conn.isOpen()) {
+            Socket socket = new Socket(host.getHostName(), host.getPort());
+            conn.bind(socket);
+        }
+
+        request = new HttpGet("/test");
+        httpexecutor.preProcess(request, httpproc, coreContext);
+        HttpResponse response = httpexecutor.execute(request, conn, coreContext);
+        httpexecutor.postProcess(response, httpproc, coreContext);
+
+        if (!connStrategy.keepAlive(response, coreContext)) {
+            conn.close();
+        }
+
+        return response;
+    }
 
     public void execRequest(HttpRequestBase req) {
-        try {
-            sleep(50);
-        } catch (InterruptedException e2) {
-            e2.printStackTrace();
-        }
-        CloseableHttpResponse response;
+        HttpResponse response;
         try {
             long start = System.currentTimeMillis();
-            response = httpClient.execute(req, context);
+            response = execute(req);
             long duration = (System.currentTimeMillis() - start);
             executionTimes.add((short) duration);
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                // BufferedReader content = new BufferedReader(new
-                // InputStreamReader(entity.getContent()));
-                // String line;
-                // while ((line = content.readLine()) != null)
-                // System.out.println(line);
-                ByteBuffer resp = ByteBuffer.wrap(EntityUtils.toByteArray(entity));
-                responseData.add(resp);
-                dataReceived += resp.capacity();
-                if (diskLog && dataReceived > 10) {
-                    // To save memory and avoid head problems, flush async
-                    flushData();
-                }
+            if (response == null) {
+                return;
             }
+
+
+            // System.out.println("<< Response: " + response.getStatusLine());
+            String data = EntityUtils.toString(response.getEntity());
+            if (data.length() != 268) {
+                throw new RuntimeException("MERDA");
+            }
+            // responseData.add(data);
+            // dataReceived += data.length();
+            // if (diskLog && dataReceived > 10) {
+            // // To save memory and avoid head problems, flush async
+            // flushData();
+            // }
         } catch (NoHttpResponseException e) {
             // Server received the request but due to overload do not reply
-            log.warn("No HTTP Response");
+            log.error("No HTTP Response", e);
             executionTimes.add((short) -1);
 
         } catch (ConnectionPoolTimeoutException e) {

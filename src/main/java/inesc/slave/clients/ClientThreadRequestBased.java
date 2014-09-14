@@ -1,10 +1,10 @@
 package inesc.slave.clients;
 
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.CloseableHttpClient;
 
 public class ClientThreadRequestBased extends
         ClientThread {
@@ -16,12 +16,12 @@ public class ClientThreadRequestBased extends
     private short[] historyCounter;
 
 
-    public ClientThreadRequestBased(CloseableHttpClient httpClient,
-            HttpRequestBase[] history,
+    public ClientThreadRequestBased(HttpRequestBase[] history,
             short[] historyCounter,
             int clientID,
-            ClientManager clientManager) {
-        super(httpClient, clientID, clientManager);
+            ClientManager clientManager,
+            URL hostURL) {
+        super(clientID, hostURL, clientManager);
 
         this.history = history;
         this.historyCounter = historyCounter;

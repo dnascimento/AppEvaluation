@@ -9,7 +9,7 @@ package inesc.slave.clients;
 
 import inesc.shared.AppEvaluationProtos.ThreadReportMsg;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Thread execution statistics
@@ -34,7 +34,7 @@ public class ThreadReport {
 
     public ThreadReport(long totalTransactions,
             int clientId,
-            ArrayList<Short> executionTimes,
+            List<Short> executionTimes,
             long totalExecutionTime,
             String reportString,
             long dataReceived) {
@@ -43,8 +43,8 @@ public class ThreadReport {
         this.report = reportString;
         this.dataReceived = dataReceived;
         this.totalExecutionTime = totalExecutionTime;
-        longest = executionTimes.get(0);
-        shortest = executionTimes.get(0);
+        longest = (executionTimes.isEmpty()) ? 0 : executionTimes.get(0);
+        shortest = (executionTimes.isEmpty()) ? 0 : executionTimes.get(0);
         totalTransferingTime = 0;
         failTransactions = 0;
 
@@ -70,7 +70,6 @@ public class ThreadReport {
 
         transactionRate = ((double) nTransactions) / (totalExecutionTime / 1000);
     }
-
 
     public ThreadReport() {
     }

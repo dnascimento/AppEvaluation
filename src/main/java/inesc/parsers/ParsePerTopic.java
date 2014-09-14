@@ -1,10 +1,11 @@
-package inesc.slave.parsers;
+package inesc.parsers;
 
 import inesc.slave.clients.ClientThread;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.net.URL;
 
 import org.apache.log4j.Logger;
 
@@ -14,8 +15,8 @@ public class ParsePerTopic extends
     private static Logger log = Logger.getLogger(ParsePerTopic.class);
 
 
-    public ParsePerTopic(File f, String hostURL, ClientThread client) {
-        super(f, hostURL, client);
+    public ParsePerTopic(File f, URL targetHost, ClientThread client) {
+        super(f, targetHost, client);
     }
 
 
@@ -32,6 +33,7 @@ public class ParsePerTopic extends
                 int start = line.indexOf('<');
                 if (start != 0) {
                     String category = line.substring(0, start);
+                    category = category.split("_")[0];
                     // new question
                     execRequest(newQuestion(line.substring(start), category));
                 } else {

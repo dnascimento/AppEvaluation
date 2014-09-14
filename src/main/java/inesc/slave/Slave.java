@@ -17,11 +17,15 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
+
+import com.google.common.io.PatternFilenameFilter;
 
 public class Slave {
     private static Logger log = Logger.getLogger(Slave.class);
@@ -52,13 +56,19 @@ public class Slave {
     }
 
 
-    Slave(String fileToExec, String targetHost) {
+    Slave(String fileToExec, URL targetHost) {
         clientManager = new ClientManager(this);
-        File f = new File(BASE_DIR + fileToExec);
-        clientManager.newFile(f, targetHost);
-        clientManager.start();
+        File dir = new File(BASE_DIR);
+        PatternFilenameFilter p = new PatternFilenameFilter(fileToExec);
+        File[] files = dir.listFiles();
+        Arrays.sort(files, new SortFilesByNumber());
+        for (File f : files) {
+            if (p.accept(dir, f.getName())) {
+                clientManager.newFile(f, targetHost);
+                clientManager.runSync();
+            }
+        }
     }
-
 
     public static void main(String[] args) throws IOException {
         DOMConfigurator.configure("log4j.xml");
@@ -71,7 +81,7 @@ public class Slave {
             log.error("Must provide the filename and target");
             return;
         }
-        new Slave(args[0], args[1]);
+        new Slave(args[0], new URL(args[1]));
     }
 
     /**
@@ -153,7 +163,7 @@ public class Slave {
 
 
 
-    public void newFileToExec(String filename, String targetHost, Socket s) throws IOException {
+    public void newFileToExec(String filename, URL targetHost, Socket s) throws IOException {
         log.info("new file to exec " + filename);
         File dir = new File(BASE_DIR);
         File f = new File(dir, filename);

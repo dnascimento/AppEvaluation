@@ -1,4 +1,4 @@
-package inesc.slave.parsers;
+package inesc.parsers;
 
 import inesc.slave.RequestCreation;
 import inesc.slave.clients.ClientManager;
@@ -6,9 +6,10 @@ import inesc.slave.clients.ClientThread;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.Date;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -26,9 +27,9 @@ public abstract class StackOverflowParser {
     Date parseStart = new Date();
 
 
-    public StackOverflowParser(File f, String hostURL, ClientThread client) {
+    public StackOverflowParser(File f, URL targetHost, ClientThread client) {
         file = f;
-        this.hostURL = hostURL;
+        this.hostURL = targetHost.toString();
         creator = new RequestCreation();
         this.client = client;
     }
@@ -45,7 +46,8 @@ public abstract class StackOverflowParser {
 
         stats.newComment(text, date);
 
-        text = StringEscapeUtils.escapeHtml(text);
+        text = StringEscapeUtils.escapeHtml4(text);
+        text = StringEscapeUtils.escapeJson(text);
         return creator.postComment(hostURL, questionId, answerId, text, author);
     }
 
@@ -70,8 +72,8 @@ public abstract class StackOverflowParser {
         log.debug("New Answer: " + questionId + " " + answerId + " " + author + " " + date);
 
         stats.newAnswer(text, date);
-
-        text = StringEscapeUtils.escapeHtml(text);
+        text = StringEscapeUtils.escapeHtml4(text);
+        text = StringEscapeUtils.escapeJson(text);
 
         return creator.postAnswer(hostURL, questionId, text, author, answerId);
     }
@@ -88,6 +90,9 @@ public abstract class StackOverflowParser {
         String views = getProperty(line, "Views");
         log.debug("New question: " + questionId + " " + answerId + " " + author + " " + date + " " + views);
 
+        text = StringEscapeUtils.escapeHtml4(text);
+        text = StringEscapeUtils.escapeJson(text);
+
         stats.newQuestion(date, tags.split(","), text, new Integer(views), category, author);
 
         return creator.postNewQuestion(hostURL, title, tags, text, author, views, "", answerId);
@@ -100,7 +105,7 @@ public abstract class StackOverflowParser {
 
     }
 
-    protected static String getProperty(String line, String property) throws Exception {
+    public static String getProperty(String line, String property) throws Exception {
         int start = line.indexOf(property + "=\"");
         if (start == -1) {
             throw new Exception("Property not found: " + property + " in line " + line);
@@ -137,10 +142,10 @@ public abstract class StackOverflowParser {
             }
             // manager.newFile(f, "http://localhost:8080");
             if (f.getName().contains("perTopic")) {
-                ParsePerTopic parser = new ParsePerTopic(f, "localhost:9000", null);
+                ParsePerTopic parser = new ParsePerTopic(f, new URL("localhost:9000"), null);
                 parser.parseFile();
             } else {
-                ParsePerDay parser = new ParsePerDay(f, "localhost:9000", null);
+                ParsePerDay parser = new ParsePerDay(f, new URL("localhost:9000"), null);
                 parser.parseFile();
             }
         }

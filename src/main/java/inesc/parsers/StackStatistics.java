@@ -1,4 +1,4 @@
-package inesc.slave.parsers;
+package inesc.parsers;
 
 import java.io.File;
 import java.io.FileNotFoundException;
