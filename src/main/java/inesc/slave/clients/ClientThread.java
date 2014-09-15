@@ -26,7 +26,6 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NoHttpResponseException;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
@@ -98,7 +97,7 @@ public abstract class ClientThread extends
                                        .add(new RequestTargetHost())
                                        .add(new RequestConnControl())
                                        .add(new RequestUserAgent("Shuttle/1.1"))
-                                       .add(new RequestExpectContinue(true))
+                                       .add(new RequestExpectContinue(false))
                                        .build();
 
         httpexecutor = new HttpRequestExecutor();
@@ -197,7 +196,7 @@ public abstract class ClientThread extends
             conn.bind(socket);
         }
 
-        request = new HttpGet("/test");
+        // request = new HttpGet("/test");
         httpexecutor.preProcess(request, httpproc, coreContext);
         HttpResponse response = httpexecutor.execute(request, conn, coreContext);
         httpexecutor.postProcess(response, httpproc, coreContext);
@@ -223,9 +222,7 @@ public abstract class ClientThread extends
 
             // System.out.println("<< Response: " + response.getStatusLine());
             String data = EntityUtils.toString(response.getEntity());
-            if (data.length() != 268) {
-                throw new RuntimeException("MERDA");
-            }
+
             // responseData.add(data);
             // dataReceived += data.length();
             // if (diskLog && dataReceived > 10) {
