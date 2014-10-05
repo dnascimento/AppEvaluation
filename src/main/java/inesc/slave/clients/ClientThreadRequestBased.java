@@ -20,8 +20,9 @@ public class ClientThreadRequestBased extends
             short[] historyCounter,
             int clientID,
             ClientManager clientManager,
-            URL hostURL) {
-        super(clientID, hostURL, clientManager);
+            URL hostURL,
+            int throughput) {
+        super(clientID, hostURL, clientManager, throughput);
 
         this.history = history;
         this.historyCounter = historyCounter;

@@ -58,7 +58,7 @@ public class Interface extends
                 System.out.println("b) Send file");
                 System.out.println("c) Start stories");
                 cmd = s.next();
-
+                int throughput;
                 switch (cmd.charAt(0)) {
                 case 'a':
                     // Send the request list using puppet
@@ -66,13 +66,17 @@ public class Interface extends
                     if (story == null)
                         continue;
                     nodes = selectNodes(s);
-                    master.sendRequest(story, nodes);
+                    System.out.println("Enter throughput:");
+                    throughput = s.nextInt();
+                    master.sendRequest(story, nodes, throughput);
                     break;
                 case 'b':
-                    System.out.println("Enter the file name");
+                    System.out.println("Enter the file name:");
                     String filename = s.next();
+                    System.out.println("Enter throughput:");
+                    throughput = s.nextInt();
                     nodes = selectNodes(s);
-                    master.sendFileName(filename, nodes, SERVER_URL);
+                    master.sendFileName(filename, nodes, SERVER_URL, throughput);
                     break;
                 case 'c':
                     master.start(StartOpt.Disk);

@@ -9,6 +9,7 @@ message FromMaster{
 	optional string destination = 2;
 	optional AppReqList reqListMsg = 3;
 	optional AppStartMsg startMsg = 4;
+	required int32 throughput = 5;
 }
 
 message ToMaster{
@@ -73,6 +74,7 @@ message ThreadReportMsg{
 	optional int64 totalExecutionTime = 10;
 	optional int64 dataReceived = 11;
 	optional int32 clientID = 12;
+	optional int32 wrongTransactions = 13;
 }
 
 

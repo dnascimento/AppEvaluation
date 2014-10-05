@@ -75,13 +75,17 @@ public class SplitBy {
             char type = subLine.charAt(1);
             switch (type) {
             case 'a':
-                stats.newAnswer(StackOverflowParser.getProperty(subLine, "Text"), StackOverflowParser.getProperty(subLine, "Date"));
+                stats.newAnswer(StackOverflowParser.getProperty(subLine, "Text"),
+                                StackOverflowParser.getProperty(subLine, "Date"),
+                                StackOverflowParser.getProperty(subLine, "Author"));
                 break;
             case 'v':
                 stats.newVotes(StackOverflowParser.getProperty(subLine, "AnswerId"));
                 break;
             case 'c':
-                stats.newComment(StackOverflowParser.getProperty(subLine, "Text"), StackOverflowParser.getProperty(subLine, "Date"));
+                stats.newComment(StackOverflowParser.getProperty(subLine, "Text"),
+                                 StackOverflowParser.getProperty(subLine, "Date"),
+                                 StackOverflowParser.getProperty(subLine, "Author"));
                 break;
             case 'q':
                 stats.newQuestion(StackOverflowParser.getProperty(subLine, "Date"),

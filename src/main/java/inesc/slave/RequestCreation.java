@@ -217,11 +217,11 @@ public class RequestCreation extends
 
 
     @Override
-    public HttpRequestBase deleteAnswer(String serverURL, String questionTitle, String answerID, String text) {
-        Parameters p = new Parameters("answerID", answerID, "text", text);
+    public HttpRequestBase deleteAnswer(String serverURL, String questionTitle, String answerID) {
         questionTitle = escapeText(questionTitle);
-        return createPacket(serverURL + "/question/" + questionTitle + "/answer", ReqType.DELETE, p, true);
+        return createPacket(serverURL + "/question/" + questionTitle + "/answer/" + escapeToURL(answerID), ReqType.DELETE, null, false);
     }
+
 
 
 
@@ -245,9 +245,11 @@ public class RequestCreation extends
 
     @Override
     public HttpRequestBase deleteComment(String serverURL, String questionTitle, String answerID, String commentID) {
-        Parameters p = new Parameters("answerID", answerID, "commentID", commentID);
         questionTitle = escapeText(questionTitle);
-        return createPacket(serverURL + "/question/" + questionTitle + "/comment", ReqType.DELETE, p, true);
+        return createPacket(serverURL + "/question/" + questionTitle + "/comment/" + escapeToURL(answerID) + "/" + escapeToURL(commentID),
+                            ReqType.DELETE,
+                            null,
+                            false);
     }
 
 
@@ -280,4 +282,14 @@ public class RequestCreation extends
         }
     }
 
+
+    /**
+     * Escapes the text replacing the characters to be compatible with the URL format
+     * 
+     * @param answerID
+     * @return
+     */
+    private String escapeToURL(String text) {
+        return text.replace("+", "%2B").replace("/", "%2F").replace("=", "%3D");
+    }
 }

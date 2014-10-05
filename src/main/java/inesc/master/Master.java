@@ -82,21 +82,21 @@ public class Master {
      * @throws IOException
      * @throws UnknownHostException
      */
-    public void sendRequest(AppReqList requestList, List<InetSocketAddress> slaves) throws Exception {
+    public void sendRequest(AppReqList requestList, List<InetSocketAddress> slaves, int throughput) throws Exception {
         for (InetSocketAddress nodeAddress : slaves) {
             Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
-            FromMaster msg = FromMaster.newBuilder().setReqListMsg(requestList).build();
+            FromMaster msg = FromMaster.newBuilder().setReqListMsg(requestList).setThroughput(throughput).build();
             msg.writeDelimitedTo(s.getOutputStream());
             s.close();
         }
     }
 
-    public void sendFileName(String filename, List<InetSocketAddress> nodes, String serverUrl) throws Exception {
+    public void sendFileName(String filename, List<InetSocketAddress> nodes, String serverUrl, int throughput) throws Exception {
         for (InetSocketAddress nodeAddress : nodes) {
             Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
             // send filename
             log.info("Sending notification of filename: " + filename);
-            FromMaster msg = FromMaster.newBuilder().setFilename(filename).setDestination(serverUrl).build();
+            FromMaster msg = FromMaster.newBuilder().setFilename(filename).setThroughput(throughput).setDestination(serverUrl).build();
             msg.writeDelimitedTo(s.getOutputStream());
 
             // get ack

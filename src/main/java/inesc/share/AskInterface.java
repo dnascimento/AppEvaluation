@@ -85,7 +85,7 @@ public abstract class AskInterface<T> {
 
     public abstract T updateAnswer(String serverURL, String questionTitle, String answerID, String text);
 
-    public abstract T deleteAnswer(String serverURL, String questionTitle, String answerID, String text);
+    public abstract T deleteAnswer(String serverURL, String questionTitle, String answerID);
 
     // ///////// comments ////////////////////
 

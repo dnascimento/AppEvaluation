@@ -39,7 +39,7 @@ public class StackStatistics {
     private final ArrayList<Integer> charsPerQuestion = new ArrayList<Integer>();
     private final ArrayList<Integer> viewsPerDay = new ArrayList<Integer>();
 
-    private final HashSet<String> authors = new HashSet<String>();
+    private final HashMap<String, ActionsCounter> authors = new HashMap<String, ActionsCounter>();
 
     private final HashMap<String, Integer> commentsPerDay = new HashMap<String, Integer>();
     private final HashMap<String, Integer> answersPerDay = new HashMap<String, Integer>();
@@ -57,7 +57,7 @@ public class StackStatistics {
         votesPerAnswer.increment();
     }
 
-    public void newComment(String text, String creationDate) throws Exception {
+    public void newComment(String text, String creationDate, String author) throws Exception {
         int textSize = text.length();
         String day = creationDate.split("T")[0];
         Integer ratePerDay = commentsPerDay.get(day);
@@ -69,6 +69,13 @@ public class StackStatistics {
         commentsPerDay.put(day, ratePerDay);
         Date date = dateFormat.parse(creationDate.replace("T", ""));
 
+        ActionsCounter actionsCount = authors.get(author);
+        if (actionsCount == null) {
+            actionsCount = new ActionsCounter();
+            authors.put(author, actionsCount);
+        }
+        actionsCount.comments++;
+        actionsCount.total++;
 
         totalComments++;
         charsPerComment.add(textSize);
@@ -77,7 +84,7 @@ public class StackStatistics {
 
 
 
-    public void newAnswer(String text, String creationDate) throws Exception {
+    public void newAnswer(String text, String creationDate, String author) throws Exception {
         int textSize = text.length();
         String day = creationDate.split("T")[0];
         Integer ratePerDay = answersPerDay.get(day);
@@ -95,13 +102,27 @@ public class StackStatistics {
         commentsPerAnswer.reset();
         votesPerAnswer.reset();
         answersPerQuestion.increment();
+
+        ActionsCounter actionsCount = authors.get(author);
+        if (actionsCount == null) {
+            actionsCount = new ActionsCounter();
+            authors.put(author, actionsCount);
+        }
+        actionsCount.answers++;
+        actionsCount.total++;
     }
 
     public void newQuestion(String fullDate, String[] tags, String text, int views, String category, String author) throws Exception {
         categories.add(category);
         int textSize = text.length();
 
-        authors.add(author);
+        ActionsCounter actionsCount = authors.get(author);
+        if (actionsCount == null) {
+            actionsCount = new ActionsCounter();
+            authors.put(author, actionsCount);
+        }
+        actionsCount.questions++;
+        actionsCount.total++;
 
         String day = fullDate.split("T")[0];
         Integer ratePerDay = questionsPerDay.get(day);
@@ -197,6 +218,47 @@ public class StackStatistics {
         sb.append(avg("charsPerComment", charsPerComment) + "\n");
         sb.append(avg("charsPerQuestion", charsPerQuestion) + "\n");
 
+        int totalActions = 0;
+        for (Entry<String, ActionsCounter> counter : authors.entrySet()) {
+            totalActions += counter.getValue().total;
+        }
+        sb.append("Authors, total actions: " + totalActions + " ," + authors.keySet().size() + " authors\n");
+        int nAuthors = authors.keySet().size();
+        int average = (nAuthors == 0) ? 0 : totalActions / nAuthors;
+        String closest = "";
+        HashSet<String> closers = new HashSet<String>();
+        int difference = Integer.MAX_VALUE;
+
+        int biggest = 0;
+        String biggestName = "";
+
+        for (Entry<String, ActionsCounter> e : authors.entrySet()) {
+            int delta = Math.abs(e.getValue().total - average);
+            if (e.getValue().questions < 3)
+                continue;
+            if (delta < difference) {
+                closest = e.getKey();
+                difference = delta;
+                closers.clear();
+            }
+            if (delta == difference) {
+                closers.add(closest);
+            }
+            if (e.getValue().total > biggest) {
+                biggest = e.getValue().total;
+                biggestName = e.getKey();
+            }
+        }
+
+        closers.add(closest);
+        for (String user : closers) {
+            ActionsCounter c = authors.get(user);
+            if (c == null)
+                continue;
+            sb.append("Average is " + average + ", closest author: " + user + ": with " + c.total + " total, " + c.answers + " answers, "
+                    + c.comments + " comments, " + c.questions + " questions," + c.votes + " votes\n");
+        }
+
         File stats = new File("rates.txt");
         PrintWriter out = new PrintWriter(stats);
 
@@ -204,6 +266,8 @@ public class StackStatistics {
         printHashMap(out, "answers", answersPerDay);
         printHashMap(out, "comments", commentsPerDay);
         out.close();
+
+
 
         return sb.toString();
     }
@@ -257,5 +321,12 @@ public class StackStatistics {
 
     }
 
+    class ActionsCounter {
+        int total;
+        int questions = 0;
+        int answers = 0;
+        int comments = 0;
+        int votes = 0;
+    }
 
 }

@@ -48,6 +48,16 @@ import org.apache.log4j.Logger;
  */
 public abstract class ClientThread extends
         Thread {
+
+    private static final short ERROR_CONNECTION_POOL_TIMEOUT = -1;
+
+    private static final short ERROR_CONNECTION_TIMEOUT = -2;
+
+    private static final short ERROR_EXCEPTION = -3;
+
+    private static final short ERROR_NO_HTTP_RESPONSE = -4;
+    private int wrongRequests = 0;
+
     static Logger log = Logger.getLogger(ClientThread.class);
 
     /** Client unique ID */
@@ -91,7 +101,21 @@ public abstract class ClientThread extends
     private final HttpCoreContext coreContext;
     private final HttpProcessor httpproc;
 
-    ClientThread(int clientId, URL targetHost, ClientManager clientManager) {
+    /** number of requests per secound */
+    private final int requestRate;
+    private int requestRateSent = 0;
+    private long currentSecound = 0;
+    private long delay;
+    private final double THROUGHPUT_MARGIN = 0.1;
+    private static final int TIMEOUT = 100;
+
+    /**
+     * @param clientId
+     * @param targetHost
+     * @param clientManager
+     * @param throughput if 0 or minor, then maximum throughput
+     */
+    ClientThread(int clientId, URL targetHost, ClientManager clientManager, int throughput) {
         httpproc = HttpProcessorBuilder.create()
                                        .add(new RequestContent())
                                        .add(new RequestTargetHost())
@@ -101,11 +125,24 @@ public abstract class ClientThread extends
                                        .build();
 
         httpexecutor = new HttpRequestExecutor();
+
         coreContext = HttpCoreContext.create();
+
         host = new HttpHost(targetHost.getHost(), targetHost.getPort());
         coreContext.setTargetHost(host);
         conn = new DefaultBHttpClientConnection(8 * 1024);
+        conn.setSocketTimeout(TIMEOUT);
+
         connStrategy = DefaultConnectionReuseStrategy.INSTANCE;
+
+
+        if (throughput <= 0) {
+            requestRate = Integer.MAX_VALUE;
+            delay = -1;
+        } else {
+            requestRate = throughput;
+            delay = (long) (((double) 1 / throughput) * 1000);
+        }
 
         this.clientID = clientId;
         this.clientManager = clientManager;
@@ -120,11 +157,12 @@ public abstract class ClientThread extends
     }
 
 
-    void collectStatistics() {
+    public void collectStatistics() {
         long totalExecutionTime = System.currentTimeMillis() - startExecution;
         // TODO optional: create better reportString
         String reportString = "";
-        ThreadReport report = new ThreadReport(totalRequests, clientID, executionTimes, totalExecutionTime, reportString, dataReceived);
+        ThreadReport report = new ThreadReport(totalRequests, clientID, executionTimes, totalExecutionTime, reportString, dataReceived,
+                wrongRequests);
         // Flush the remain data
         if (diskLog) {
             flushData();
@@ -208,36 +246,43 @@ public abstract class ClientThread extends
         return response;
     }
 
-    public void execRequest(HttpRequestBase req) {
+    public boolean execRequest(HttpRequestBase req) {
         HttpResponse response;
+
+        throughputControl();
         try {
             long start = System.currentTimeMillis();
             response = execute(req);
             long duration = (System.currentTimeMillis() - start);
             executionTimes.add((short) duration);
             if (response == null) {
-                return;
+                return true;
             }
 
 
             // System.out.println("<< Response: " + response.getStatusLine());
             String data = EntityUtils.toString(response.getEntity());
-
+            if (data != null && data.startsWith("ERROR:")) {
+                // the application thrown an exception
+                wrongRequests++;
+                return false;
+            }
             // responseData.add(data);
             // dataReceived += data.length();
             // if (diskLog && dataReceived > 10) {
             // // To save memory and avoid head problems, flush async
             // flushData();
             // }
+            return true;
         } catch (NoHttpResponseException e) {
             // Server received the request but due to overload do not reply
-            log.error("No HTTP Response", e);
-            executionTimes.add((short) -1);
+            log.error("NO_HTTP_RESPONSE", e);
+            executionTimes.add(ERROR_NO_HTTP_RESPONSE);
 
         } catch (ConnectionPoolTimeoutException e) {
             // multithreaded connection manager fails to obtain a free connection
             log.warn("Connection Pool Timeout Exception");
-            executionTimes.add((short) -2);
+            executionTimes.add(ERROR_CONNECTION_POOL_TIMEOUT);
 
         } catch (ConnectTimeoutException e) {
             try {
@@ -247,14 +292,51 @@ public abstract class ClientThread extends
             }
             // unable to establish a connection
             log.warn("Connect Timeout Exception");
-            executionTimes.add((short) -3);
+            executionTimes.add(ERROR_CONNECTION_TIMEOUT);
 
         } catch (Exception e) {
             log.warn(e);
             log.error(e);
             e.printStackTrace();
-            executionTimes.add((short) -4);
+            executionTimes.add(ERROR_EXCEPTION);
+        }
+        return false;
+
+    }
+
+
+
+
+    /**
+     * The delay controls the throughput, at end of each second, the throughput is
+     * compared and the delay is adapted.
+     */
+    private void throughputControl() {
+        if (delay < 0) {
+            return;
+        }
+        // delay the request to control the throughput
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
+        long now = System.currentTimeMillis() / 1000;
+        if (currentSecound == 0) {
+            currentSecound = now;
+        }
+
+        if (now != currentSecound) {
+            currentSecound = now;
+            if (Math.abs(requestRateSent - requestRate) > (requestRate * THROUGHPUT_MARGIN)) {
+                System.out.println("old " + delay);
+                delay = (delay == 0) ? 1000 : delay;
+                delay = (long) (delay * ((double) requestRateSent / requestRate));
+            }
+            requestRateSent = 0;
+            System.out.println("delay " + delay);
+        }
+        requestRateSent++;
     }
 }

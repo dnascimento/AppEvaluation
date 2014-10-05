@@ -25,6 +25,8 @@ public class ThreadReport {
     public short shortest;
     public int totalTransferingTime;
     public long failTransactions;
+    // transaction that have been performed but thrown an exception
+    public int wrongTransactions;
     public String report;
     public long totalExecutionTime;
     public long dataReceived;
@@ -37,7 +39,8 @@ public class ThreadReport {
             List<Short> executionTimes,
             long totalExecutionTime,
             String reportString,
-            long dataReceived) {
+            long dataReceived,
+            int wrongRequests) {
         this.nTransactions = totalTransactions;
         this.clientId = clientId;
         this.report = reportString;
@@ -47,6 +50,7 @@ public class ThreadReport {
         shortest = (executionTimes.isEmpty()) ? 0 : executionTimes.get(0);
         totalTransferingTime = 0;
         failTransactions = 0;
+        this.wrongTransactions = wrongRequests;
 
         for (int i = 0; i < executionTimes.size(); i++) {
             if (executionTimes.get(i) < 0) {
@@ -100,6 +104,7 @@ public class ThreadReport {
                               .setNTransactions(nTransactions)
                               .setReport(report)
                               .setShortest(shortest)
+                              .setWrongTransactions(wrongTransactions)
                               .setSuccessTransactions(successTransactions)
                               .setTotalExecutionTime(totalExecutionTime)
                               .setTotalTransferingTime(totalTransferingTime)
@@ -114,7 +119,7 @@ public class ThreadReport {
         sb.append("Success: " + successTransactions + "\n");
         sb.append("Fail: " + failTransactions + "\n");
         sb.append("Success Rate: " + ((double) successTransactions / nTransactions) * 100 + "% \n");
-
+        sb.append("Wront transactins (Exception): " + wrongTransactions + "\n\n");
         sb.append("Transaction Rate: " + String.format("%.2f", transactionRate) + " req/sec \n\n");
         sb.append("Total time: \n");
         sb.append("Transfering: " + totalTransferingTime + "ms \n");

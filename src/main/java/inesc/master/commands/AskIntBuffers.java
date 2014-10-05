@@ -134,13 +134,12 @@ public class AskIntBuffers extends
 
 
     @Override
-    public AppRequest.Builder deleteAnswer(String serverURL, String questionTitle, String answerID, String text) {
+    public AppRequest.Builder deleteAnswer(String serverURL, String questionTitle, String answerID) {
 
         AppRequest.Builder builder = AppRequest.newBuilder().setType(ReqType.DELETE)
 
         .setContentType(JSON).setUrl(serverURL + "/question/" + questionTitle + "/answer");
         builder.addParameters(Parameter.newBuilder().setKey("answerID").setValue(answerID));
-        builder.addParameters(Parameter.newBuilder().setKey("text").setValue(text));
         return builder;
     }
 

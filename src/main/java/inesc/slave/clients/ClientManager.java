@@ -58,14 +58,14 @@ public class ClientManager extends
         id = 0;
     }
 
-    public void newFile(File f, URL targetHost) {
-        ClientThread thread = new ClientThreadFileBased(id++, this, f, targetHost);
+    public void newFile(File f, URL targetHost, int throughput) {
+        ClientThread thread = new ClientThreadFileBased(id++, this, f, targetHost, throughput);
         clientThreads.add(thread);
         log.info("New Client using file " + f);
     }
 
-    public void newClient(HttpRequestBase[] history, short[] historyCounter, URL targetURL) {
-        ClientThread thread = new ClientThreadRequestBased(history, historyCounter, id++, this, targetURL);
+    public void newClient(HttpRequestBase[] history, short[] historyCounter, URL targetURL, int throughput) {
+        ClientThread thread = new ClientThreadRequestBased(history, historyCounter, id++, this, targetURL, throughput);
         clientThreads.add(thread);
         log.info("New Client with " + history.length + " requests");
     }
@@ -101,6 +101,8 @@ public class ClientManager extends
 
         if (slave != null)
             slave.sendReportToMaster(clientReports);
+        else
+            System.out.println(clientReports);
         // Clean the threads and connections
         this.restart();
     }
@@ -123,6 +125,10 @@ public class ClientManager extends
         for (ClientThread thread : clientThreads) {
             thread.setStartOptions(optList);
         }
+    }
+
+    public ThreadReport[] getReports() {
+        return clientReports;
     }
 
 }

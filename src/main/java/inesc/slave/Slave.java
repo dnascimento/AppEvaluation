@@ -1,19 +1,14 @@
 package inesc.slave;
 
 import inesc.master.Master;
-import inesc.shared.AppEvaluationProtos.AppAck;
-import inesc.shared.AppEvaluationProtos.AppAck.ResStatus;
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
 import inesc.shared.AppEvaluationProtos.SlaveID;
 import inesc.shared.AppEvaluationProtos.ToMaster;
 import inesc.slave.clients.ClientManager;
 import inesc.slave.clients.ThreadReport;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,6 +17,8 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
@@ -30,7 +27,7 @@ import com.google.common.io.PatternFilenameFilter;
 public class Slave {
     private static Logger log = Logger.getLogger(Slave.class);
 
-    private final String BASE_DIR = "slave/";
+    static final String BASE_DIR = "slave/";
     private InetSocketAddress masterAddress;
     public InetSocketAddress myAddress;
 
@@ -38,25 +35,32 @@ public class Slave {
     private static final int PORT_RANGE_MIN = 9000;
     /** Max port of server */
     private static final int PORT_RANGE_MAX = 9200;
-    private static int K = 1024;
 
 
     public ClientManager clientManager;
 
-    Slave() throws UnknownHostException, IOException {
+    public Slave() {
         masterAddress = Master.MASTER_ADDRESS;
         int port = getFreePort();
         // TODO Get local IP
         String host = "localhost";
         myAddress = new InetSocketAddress(host, port);
-        new SlaveService(this).start();
+        try {
+            new SlaveService(this).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         clientManager = new ClientManager(this);
-        register();
+        try {
+            register();
+        } catch (Exception e) {
+            System.out.println("Master not available");
+            e.printStackTrace();
+        }
         log.info("Starting slave at port " + port + "....");
     }
 
-
-    Slave(String fileToExec, URL targetHost) {
+    public Slave(String fileToExec, URL targetHost, int throughput) {
         clientManager = new ClientManager(this);
         File dir = new File(BASE_DIR);
         PatternFilenameFilter p = new PatternFilenameFilter(fileToExec);
@@ -64,25 +68,21 @@ public class Slave {
         Arrays.sort(files, new SortFilesByNumber());
         for (File f : files) {
             if (p.accept(dir, f.getName())) {
-                clientManager.newFile(f, targetHost);
+                clientManager.newFile(f, targetHost, throughput);
                 clientManager.runSync();
+            }
+        }
+        ThreadReport[] reports = clientManager.getReports();
+        if (reports == null) {
+            System.out.println("No reports");
+        } else {
+            for (ThreadReport report : reports) {
+                System.out.println(report);
             }
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        DOMConfigurator.configure("log4j.xml");
-        if (args.length == 0) {
-            new Slave();
-            return;
-        }
 
-        if (args.length != 2) {
-            log.error("Must provide the filename and target");
-            return;
-        }
-        new Slave(args[0], new URL(args[1]));
-    }
 
     /**
      * Register slave on master
@@ -100,7 +100,9 @@ public class Slave {
     }
 
 
-
+    public void start() {
+        clientManager.start();
+    }
 
     /**
      * Send the reports to master
@@ -155,58 +157,71 @@ public class Slave {
         }
     }
 
-    private ToMaster.Builder newToMaster() {
+    public ToMaster.Builder newToMaster() {
         SlaveID.Builder id = SlaveID.newBuilder().setPort(myAddress.getPort()).setHost(myAddress.getHostString());
         return ToMaster.newBuilder().setSlaveId(id);
     }
 
 
-
-
-    public void newFileToExec(String filename, URL targetHost, Socket s) throws IOException {
-        log.info("new file to exec " + filename);
-        File dir = new File(BASE_DIR);
-        File f = new File(dir, filename);
-        if (f.exists()) {
-            log.info("file exists");
-            AppAck msg = AppAck.newBuilder().setStatus(ResStatus.OK).build();
-            newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-        } else {
-            // needs the file, ask for transfer
-            AppAck msg = AppAck.newBuilder().setStatus(ResStatus.ERROR).build();
-            newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-            transferFile(f, s);
-            log.info("File transfered with success");
-        }
-        clientManager.newFile(f, targetHost);
+    public void newFileToExec(File f, URL targetHost, int throughput) throws IOException {
+        clientManager.newFile(f, targetHost, throughput);
     }
 
-    private void transferFile(File f, Socket s) {
-        FileWriter fw = null;
-        log.info("transfering file...");
-        try {
-            File dir = new File(BASE_DIR);
-            dir.mkdirs();
-            f.createNewFile();
-            fw = new FileWriter(f);
-            BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            int readed;
-            char[] buffer = new char[1024 * K];
-            while ((readed = in.read(buffer)) > 0) {
-                fw.write(buffer, 0, readed);
-            }
-            fw.flush();
-            log.info("transfer completed");
-        } catch (Exception e) {
-            log.error(e);
-        } finally {
-            try {
-                fw.close();
-            } catch (Exception e) {
-                log.error(e);
-            }
-        }
+    public void newExecutionList(HttpRequestBase[] history, short[] counter, URL url, int throughput) {
+        clientManager.newClient(history, counter, url, throughput);
     }
 
 
+    public static void main(String[] args) throws IOException {
+        DOMConfigurator.configure("log4j.xml");
+        if (args.length == 0) {
+            new Slave();
+            return;
+        }
+
+
+        HttpRequestBase[] reqs = new HttpRequestBase[] { new HttpGet("/") };
+        short[] counter = new short[] { 2000 };
+        URL url = new URL("http://localhost:8080");
+        Slave sl = new Slave();
+        sl.newExecutionList(reqs, counter, url, -1);
+        sl.clientManager.runSync();
+        return;
+        //
+        // String fileToExec;
+        // URL target;
+        //
+        // if (args.length == 3) {
+        // fileToExec = args[0];
+        // target = new URL(args[1]);
+        // int throughput = Integer.valueOf(args[2]);
+        // new Slave(fileToExec, target, throughput);
+        // return;
+        // }
+        //
+        // if (args.length == 2) {
+        // Slave slave = new Slave();
+        // File dir = new File("/Users/darionascimento/git/AppEvaluation/slave/");
+        // target = new URL(args[0]);
+        // int throughput = Integer.valueOf(args[1]);
+        // for (File f : dir.listFiles()) {
+        // if (f.getName().startsWith(".")) {
+        // continue;
+        // }
+        // slave.newFileToExec(f, target, throughput);
+        // }
+        // slave.clientManager.runSync();
+        // return;
+        // }
+        //
+        //
+        // target = new URL(args[0]);
+        // @SuppressWarnings("resource")
+        // Scanner s = new Scanner(System.in);
+        // while (true) {
+        // System.out.println("Enter the file name: ");
+        // fileToExec = s.nextLine();
+        // new Slave(fileToExec, target, -1);
+        // }
+    }
 }

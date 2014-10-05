@@ -67,5 +67,4 @@ public class ParsePerDay extends
         log.fatal(summary());
         return stats.total();
     }
-
 }

@@ -14,8 +14,8 @@ public class ClientThreadFileBased extends
 
     StackOverflowParser parser;
 
-    public ClientThreadFileBased(int clientId, ClientManager clientManager, File f, URL targetHost) {
-        super(clientId, targetHost, clientManager);
+    public ClientThreadFileBased(int clientId, ClientManager clientManager, File f, URL targetHost, int throughput) {
+        super(clientId, targetHost, clientManager, throughput);
         if (isTimeOrdered(f.getName())) {
             parser = new ParsePerDay(f, targetHost, this);
         } else {
@@ -27,7 +27,7 @@ public class ClientThreadFileBased extends
 
     private boolean isTimeOrdered(String fileName) {
         String name = fileName.toLowerCase();
-        return name.contains("day") || name.contains("week");
+        return !(name.contains("topic"));
     }
 
     /**
