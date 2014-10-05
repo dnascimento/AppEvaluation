@@ -8,9 +8,9 @@
 package inesc.master.commands;
 
 import inesc.share.AskInterface;
-import inesc.shared.AppEvaluationProtos.AppRequest;
-import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
-import inesc.shared.AppEvaluationProtos.Parameter;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest.Parameter;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest.ReqType;
 
 /**
  * Generate request to Invoke the website (Highest level API)

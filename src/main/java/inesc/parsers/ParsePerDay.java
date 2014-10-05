@@ -5,21 +5,21 @@ import inesc.slave.clients.ClientThread;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.net.URL;
 
+import org.apache.http.HttpHost;
 import org.apache.log4j.Logger;
 
 public class ParsePerDay extends
         StackOverflowParser {
 
-    public ParsePerDay(File f, URL targetHost, ClientThread client) {
-        super(f, targetHost, client);
+    public ParsePerDay(File f, HttpHost targetHost, ClientThread client, StackStatistics stats) {
+        super(f, targetHost, client, stats);
     }
 
     private static Logger log = Logger.getLogger(ParsePerDay.class);
 
     @Override
-    public long parseFile() throws Exception {
+    public void parseFile() throws Exception {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
         log.info("Parsing file: " + file.getAbsolutePath() + "...");
@@ -31,8 +31,7 @@ public class ParsePerDay extends
                 char[] lineChars = line.toCharArray();
                 if (lineChars[0] != '<') {
                     // new date
-                    String date = line.substring(0, 24);
-                    log.debug(date);
+                    // String date = line.substring(0, 24);
                     line = line.substring(24);
                     lineChars = line.toCharArray();
                 }
@@ -64,7 +63,5 @@ public class ParsePerDay extends
             }
         }
         br.close();
-        log.fatal(summary());
-        return stats.total();
     }
 }

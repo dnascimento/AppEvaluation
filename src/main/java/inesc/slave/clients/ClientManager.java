@@ -8,13 +8,10 @@
 package inesc.slave.clients;
 
 
-import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
 import inesc.slave.Slave;
 
 import java.io.File;
-import java.net.URL;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Logger;
@@ -37,8 +34,6 @@ public class ClientManager extends
     /* Max number of concurrent threads using same route */
     public static final int MAX_CONNECTIONS_PER_ROUTE = 200;
 
-    /* milisecounds delay */
-    public static final int DELAY_BETWEEN_REQUESTS = 10;
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
     private ThreadReport[] clientReports;
@@ -52,20 +47,20 @@ public class ClientManager extends
     }
 
     public void restart() {
-
+        // TODO
         clientThreads.clear();
         clientReports = null;
         id = 0;
     }
 
-    public void newFile(File f, URL targetHost, int throughput) {
-        ClientThread thread = new ClientThreadFileBased(id++, this, f, targetHost, throughput);
+    public void newFile(File f, ClientConfiguration config) {
+        ClientThread thread = new ClientThreadFileBased(id++, this, f, config);
         clientThreads.add(thread);
         log.info("New Client using file " + f);
     }
 
-    public void newClient(HttpRequestBase[] history, short[] historyCounter, URL targetURL, int throughput) {
-        ClientThread thread = new ClientThreadRequestBased(history, historyCounter, id++, this, targetURL, throughput);
+    public void newHistory(HttpRequestBase[] history, long[] counter, ClientConfiguration config) {
+        ClientThread thread = new ClientThreadRequestBased(history, counter, id++, this, config);
         clientThreads.add(thread);
         log.info("New Client with " + history.length + " requests");
     }
@@ -81,7 +76,7 @@ public class ClientManager extends
 
     public void runSync() {
         clientReports = new ThreadReport[id];
-        log.info("Starting " + clientThreads.size() + "Clients....");
+        log.info("Starting " + clientThreads.size() + " clients....");
 
         // start the threads
         for (ClientThread thread : clientThreads) {
@@ -99,10 +94,14 @@ public class ClientManager extends
 
         log.info("Clients done...");
 
-        if (slave != null)
+        if (slave.masterIsAvailable) {
             slave.sendReportToMaster(clientReports);
-        else
-            System.out.println(clientReports);
+        } else {
+            for (ThreadReport report : clientReports) {
+                System.out.println(report);
+            }
+        }
+
         // Clean the threads and connections
         this.restart();
     }
@@ -110,22 +109,14 @@ public class ClientManager extends
 
     /**
      * Add report after execution (invoked per thread)
-     * Synchonization is done by individual array access
      * 
      * @param clientId
      * @param report
      */
-    public void addReport(int clientId, ThreadReport report) {
+    public synchronized void addReport(int clientId, ThreadReport report) {
         clientReports[clientId] = report;
     }
 
-
-    /** Set the client Thead Execution Options */
-    public void setStartOptions(List<StartOpt> optList) {
-        for (ClientThread thread : clientThreads) {
-            thread.setStartOptions(optList);
-        }
-    }
 
     public ThreadReport[] getReports() {
         return clientReports;

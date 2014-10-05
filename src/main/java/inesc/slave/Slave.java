@@ -2,8 +2,9 @@ package inesc.slave;
 
 import inesc.master.Master;
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
-import inesc.shared.AppEvaluationProtos.SlaveID;
 import inesc.shared.AppEvaluationProtos.ToMaster;
+import inesc.shared.AppEvaluationProtos.ToMaster.SlaveID;
+import inesc.slave.clients.ClientConfiguration;
 import inesc.slave.clients.ClientManager;
 import inesc.slave.clients.ThreadReport;
 
@@ -12,76 +13,58 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-
-import com.google.common.io.PatternFilenameFilter;
 
 public class Slave {
     private static Logger log = Logger.getLogger(Slave.class);
 
     static final String BASE_DIR = "slave/";
-    private InetSocketAddress masterAddress;
+    private final InetSocketAddress masterAddress;
     public InetSocketAddress myAddress;
 
     /** Minimum port of server */
     private static final int PORT_RANGE_MIN = 9000;
     /** Max port of server */
     private static final int PORT_RANGE_MAX = 9200;
+    private SlaveService service;
+    public boolean masterIsAvailable = true;
 
-
-    public ClientManager clientManager;
+    private ClientManager clientManager;
 
     public Slave() {
-        masterAddress = Master.MASTER_ADDRESS;
+        this(Master.MASTER_ADDRESS);
+    }
+
+    public Slave(InetSocketAddress masterAddress) {
+        Thread.currentThread().setName("Slave main thread");
+
+        this.masterAddress = masterAddress;
         int port = getFreePort();
         // TODO Get local IP
         String host = "localhost";
         myAddress = new InetSocketAddress(host, port);
         try {
-            new SlaveService(this).start();
+            service = new SlaveService(this);
+            service.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
         clientManager = new ClientManager(this);
-        try {
-            register();
-        } catch (Exception e) {
-            System.out.println("Master not available");
-            e.printStackTrace();
+        if (masterAddress != null) {
+            try {
+                register();
+            } catch (Exception e) {
+                System.out.println("Master is not available");
+                masterIsAvailable = false;
+            }
         }
         log.info("Starting slave at port " + port + "....");
     }
-
-    public Slave(String fileToExec, URL targetHost, int throughput) {
-        clientManager = new ClientManager(this);
-        File dir = new File(BASE_DIR);
-        PatternFilenameFilter p = new PatternFilenameFilter(fileToExec);
-        File[] files = dir.listFiles();
-        Arrays.sort(files, new SortFilesByNumber());
-        for (File f : files) {
-            if (p.accept(dir, f.getName())) {
-                clientManager.newFile(f, targetHost, throughput);
-                clientManager.runSync();
-            }
-        }
-        ThreadReport[] reports = clientManager.getReports();
-        if (reports == null) {
-            System.out.println("No reports");
-        } else {
-            for (ThreadReport report : reports) {
-                System.out.println(report);
-            }
-        }
-    }
-
 
 
     /**
@@ -102,6 +85,12 @@ public class Slave {
 
     public void start() {
         clientManager.start();
+    }
+
+
+    public void startSync() {
+        clientManager.runSync();
+        service.end();
     }
 
     /**
@@ -163,12 +152,12 @@ public class Slave {
     }
 
 
-    public void newFileToExec(File f, URL targetHost, int throughput) throws IOException {
-        clientManager.newFile(f, targetHost, throughput);
+    public void newFile(File f, ClientConfiguration conf) {
+        clientManager.newFile(f, conf);
     }
 
-    public void newExecutionList(HttpRequestBase[] history, short[] counter, URL url, int throughput) {
-        clientManager.newClient(history, counter, url, throughput);
+    public void newHistory(HttpRequestBase[] history, long[] counter, ClientConfiguration conf) {
+        clientManager.newHistory(history, counter, conf);
     }
 
 
@@ -176,52 +165,10 @@ public class Slave {
         DOMConfigurator.configure("log4j.xml");
         if (args.length == 0) {
             new Slave();
-            return;
         }
-
-
-        HttpRequestBase[] reqs = new HttpRequestBase[] { new HttpGet("/") };
-        short[] counter = new short[] { 2000 };
-        URL url = new URL("http://localhost:8080");
-        Slave sl = new Slave();
-        sl.newExecutionList(reqs, counter, url, -1);
-        sl.clientManager.runSync();
-        return;
-        //
-        // String fileToExec;
-        // URL target;
-        //
-        // if (args.length == 3) {
-        // fileToExec = args[0];
-        // target = new URL(args[1]);
-        // int throughput = Integer.valueOf(args[2]);
-        // new Slave(fileToExec, target, throughput);
-        // return;
-        // }
-        //
-        // if (args.length == 2) {
-        // Slave slave = new Slave();
-        // File dir = new File("/Users/darionascimento/git/AppEvaluation/slave/");
-        // target = new URL(args[0]);
-        // int throughput = Integer.valueOf(args[1]);
-        // for (File f : dir.listFiles()) {
-        // if (f.getName().startsWith(".")) {
-        // continue;
-        // }
-        // slave.newFileToExec(f, target, throughput);
-        // }
-        // slave.clientManager.runSync();
-        // return;
-        // }
-        //
-        //
-        // target = new URL(args[0]);
-        // @SuppressWarnings("resource")
-        // Scanner s = new Scanner(System.in);
-        // while (true) {
-        // System.out.println("Enter the file name: ");
-        // fileToExec = s.nextLine();
-        // new Slave(fileToExec, target, -1);
-        // }
+        if (args.length == 2) {
+            new Slave(new InetSocketAddress(args[1], Integer.valueOf(args[2])));
+        }
     }
+
 }

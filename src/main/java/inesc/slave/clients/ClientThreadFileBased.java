@@ -5,24 +5,20 @@ import inesc.parsers.ParsePerTopic;
 import inesc.parsers.StackOverflowParser;
 
 import java.io.File;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 public class ClientThreadFileBased extends
         ClientThread {
 
     StackOverflowParser parser;
 
-    public ClientThreadFileBased(int clientId, ClientManager clientManager, File f, URL targetHost, int throughput) {
-        super(clientId, targetHost, clientManager, throughput);
+    public ClientThreadFileBased(int clientId, ClientManager clientManager, File f, ClientConfiguration config) {
+        super(clientId, clientManager, config);
+
         if (isTimeOrdered(f.getName())) {
-            parser = new ParsePerDay(f, targetHost, this);
+            parser = new ParsePerDay(f, config.target, this, null);
         } else {
-            parser = new ParsePerTopic(f, targetHost, this);
+            parser = new ParsePerTopic(f, config.target, this, null);
         }
-        executionTimes = new ArrayList<Short>();
-        responseData = new ArrayList<ByteBuffer>();
     }
 
     private boolean isTimeOrdered(String fileName) {
@@ -35,16 +31,19 @@ public class ClientThreadFileBased extends
      */
     @Override
     public void run() {
-        initStatistics();
-        log.info("Client" + clientID + "starting...");
+        log.info("Client" + clientId + "starting...");
+        Thread.currentThread().setName("FileBasedThead " + clientId);
         try {
-            totalRequests = parser.parseFile();
-            log.info("Total requests: " + totalRequests);
+            parser.parseFile();
         } catch (Exception e) {
             log.error(e);
             e.printStackTrace();
         }
-        collectStatistics();
+        try {
+            end();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

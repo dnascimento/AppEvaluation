@@ -7,9 +7,11 @@
 
 package inesc.slave.clients;
 
-import inesc.shared.AppEvaluationProtos.ThreadReportMsg;
 
-import java.util.List;
+import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg.ThreadReportMsg;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Thread execution statistics
@@ -17,67 +19,82 @@ import java.util.List;
  * @author darionascimento
  */
 public class ThreadReport {
-    public long nTransactions;
-    public long successTransactions;
-    public int averageResponseTime;
-    public double transactionRate;
-    public short longest;
-    public short shortest;
-    public int totalTransferingTime;
-    public long failTransactions;
-    // transaction that have been performed but thrown an exception
-    public int wrongTransactions;
-    public String report;
     public long totalExecutionTime;
-    public long dataReceived;
-    public int clientId;
+    public int clientId, totalResponseLatency;
+    public double averageResponseTime, longest, shortest, percentil90, percentil95;
 
+    public long nTransactions, successTransactions, failTransactions;
+    public double transactionRate;
+    private long dataReceived;
+    private int exceptionResponse;
 
+    private static final int TO_MILISECOND = 1000000;
 
-    public ThreadReport(long totalTransactions,
-            int clientId,
-            List<Short> executionTimes,
-            long totalExecutionTime,
-            String reportString,
-            long dataReceived,
-            int wrongRequests) {
-        this.nTransactions = totalTransactions;
-        this.clientId = clientId;
-        this.report = reportString;
-        this.dataReceived = dataReceived;
-        this.totalExecutionTime = totalExecutionTime;
-        longest = (executionTimes.isEmpty()) ? 0 : executionTimes.get(0);
-        shortest = (executionTimes.isEmpty()) ? 0 : executionTimes.get(0);
-        totalTransferingTime = 0;
-        failTransactions = 0;
-        this.wrongTransactions = wrongRequests;
+    public ThreadReport() {
 
-        for (int i = 0; i < executionTimes.size(); i++) {
+    }
+
+    /**
+     * create a report processing the collected statistics
+     * 
+     * @param clientId
+     */
+    public ThreadReport(int clientId, Statistics stats) {
+        totalExecutionTime = (System.nanoTime() - stats.startExecution) / TO_MILISECOND;
+        nTransactions = stats.executionTimes.size();
+        ArrayList<Integer> executionTimes = stats.executionTimes;
+        longest = 0;
+        shortest = Double.MAX_VALUE;
+
+        for (int i = 0; i < nTransactions; i++) {
+            // failed requests time counts too
+            double execTime = Math.abs(executionTimes.get(i) / TO_MILISECOND);
+
+            totalResponseLatency += execTime;
+
             if (executionTimes.get(i) < 0) {
                 failTransactions++;
                 continue;
             }
-            if (longest < executionTimes.get(i)) {
-                longest = executionTimes.get(i);
+            if (longest < execTime) {
+                longest = execTime;
             }
-            if (shortest > executionTimes.get(i)) {
-                shortest = executionTimes.get(i);
+            if (shortest > execTime) {
+                shortest = execTime;
             }
-            totalTransferingTime += executionTimes.get(i);
         }
 
         successTransactions = nTransactions - failTransactions;
-        if (successTransactions != 0)
-            averageResponseTime = (int) (totalTransferingTime / successTransactions);
+        if (successTransactions > 0)
+            averageResponseTime = (totalResponseLatency / successTransactions);
         else
             averageResponseTime = 0;
 
-        transactionRate = ((double) nTransactions) / (totalExecutionTime / 1000);
+
+        transactionRate = (((double) nTransactions) / (totalExecutionTime) * 1000);
+        this.dataReceived = stats.dataReceived;
+        this.exceptionResponse = stats.exceptionResponse;
+
+
+        // set values for absolute
+        for (int i = 0; i < executionTimes.size(); i++) {
+            executionTimes.set(i, Math.abs(executionTimes.get(i)));
+        }
+
+        // calculate 90th and 95th percentil
+        Collections.sort(executionTimes);
+        this.percentil95 = calculatePercentil(executionTimes, 95) / TO_MILISECOND;
+        this.percentil90 = calculatePercentil(executionTimes, 90) / TO_MILISECOND;
     }
 
-    public ThreadReport() {
-    }
+    private double calculatePercentil(ArrayList<Integer> array, int percentil) {
+        int n = array.size();
+        double p = percentil / 100;
+        int k = (int) ((n - 1) * p);
+        double d = ((n - 1) * p);
 
+        return array.get(k + 1) + d * (array.get(k + 2) - array.get(k + 1));
+    }
 
     public static ThreadReport fromProtBuffer(ThreadReportMsg msg) {
         ThreadReport report = new ThreadReport();
@@ -86,12 +103,14 @@ public class ThreadReport {
         report.failTransactions = msg.getFailTransactions();
         report.longest = (short) msg.getLongest();
         report.nTransactions = msg.getNTransactions();
-        report.report = msg.getReport();
         report.shortest = (short) msg.getShortest();
         report.successTransactions = msg.getSuccessTransactions();
         report.totalExecutionTime = msg.getTotalExecutionTime();
-        report.totalTransferingTime = msg.getTotalTransferingTime();
+        report.totalResponseLatency = msg.getTotalTransferingTime();
         report.transactionRate = msg.getTransactionRate();
+        report.exceptionResponse = msg.getExceptionResponse();
+        report.percentil90 = msg.getPercentil90();
+        report.percentil95 = msg.getPercentil95();
         return report;
     }
 
@@ -102,15 +121,17 @@ public class ThreadReport {
                               .setFailTransactions(failTransactions)
                               .setLongest(longest)
                               .setNTransactions(nTransactions)
-                              .setReport(report)
                               .setShortest(shortest)
-                              .setWrongTransactions(wrongTransactions)
+                              .setExceptionResponse(exceptionResponse)
                               .setSuccessTransactions(successTransactions)
                               .setTotalExecutionTime(totalExecutionTime)
-                              .setTotalTransferingTime(totalTransferingTime)
+                              .setTotalTransferingTime(totalResponseLatency)
                               .setTransactionRate(transactionRate)
+                              .setPercentil90(percentil90)
+                              .setPercentil95(percentil95)
                               .build();
     }
+
 
     @Override
     public String toString() {
@@ -119,20 +140,23 @@ public class ThreadReport {
         sb.append("Success: " + successTransactions + "\n");
         sb.append("Fail: " + failTransactions + "\n");
         sb.append("Success Rate: " + ((double) successTransactions / nTransactions) * 100 + "% \n");
-        sb.append("Wront transactins (Exception): " + wrongTransactions + "\n\n");
+        sb.append("Wront transactins (Exception): " + exceptionResponse + "\n\n");
         sb.append("Transaction Rate: " + String.format("%.2f", transactionRate) + " req/sec \n\n");
         sb.append("Total time: \n");
-        sb.append("Transfering: " + totalTransferingTime + "ms \n");
+        sb.append("Transfering: " + totalResponseLatency + "ms \n");
         sb.append("Execution: " + totalExecutionTime + "ms \n");
 
         sb.append("\n");
-        sb.append("Request time:\n");
+        sb.append("Response latency:\n");
         sb.append("- Average: " + averageResponseTime + "ms \n");
         sb.append("- Longest " + longest + "ms \n");
         sb.append("- Shortest " + shortest + "ms \n");
+        sb.append("- 95th " + percentil95 + " ms \n");
+        sb.append("- 90th " + percentil90 + " ms \n");
         sb.append("\n");
         sb.append("Received: " + dataReceived + " bytes");
 
         return sb.toString();
     }
+
 }

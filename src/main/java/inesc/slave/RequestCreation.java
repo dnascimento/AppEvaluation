@@ -1,10 +1,9 @@
 package inesc.slave;
 
 import inesc.share.AskInterface;
-import inesc.shared.AppEvaluationProtos;
-import inesc.shared.AppEvaluationProtos.AppRequest;
-import inesc.shared.AppEvaluationProtos.AppRequest.ReqType;
-import inesc.shared.AppEvaluationProtos.Parameter;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest.Parameter;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest.ReqType;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -55,7 +54,7 @@ public class RequestCreation extends
         HttpRequestBase request = null;
         try {
             if (parameters == null) {
-                parameters = new Parameters(new LinkedList<AppEvaluationProtos.Parameter>());
+                parameters = new Parameters(new LinkedList<Parameter>());
             }
             switch (type) {
             case GET:

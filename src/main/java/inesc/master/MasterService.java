@@ -1,8 +1,8 @@
 package inesc.master;
 
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
-import inesc.shared.AppEvaluationProtos.SlaveID;
 import inesc.shared.AppEvaluationProtos.ToMaster;
+import inesc.shared.AppEvaluationProtos.ToMaster.SlaveID;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

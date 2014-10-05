@@ -8,10 +8,9 @@ package inesc.master;
 
 import inesc.shared.AppEvaluationProtos.AppAck;
 import inesc.shared.AppEvaluationProtos.AppAck.ResStatus;
-import inesc.shared.AppEvaluationProtos.AppReqList;
-import inesc.shared.AppEvaluationProtos.AppStartMsg;
-import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
+import inesc.shared.AppEvaluationProtos.FileMsg;
 import inesc.shared.AppEvaluationProtos.FromMaster;
+import inesc.shared.AppEvaluationProtos.HistoryMsg;
 import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg;
 import inesc.shared.AppEvaluationProtos.ToMaster;
 
@@ -22,7 +21,6 @@ import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -74,36 +72,27 @@ public class Master {
     }
 
 
-    /**
-     * Send request to nodes
-     * 
-     * @param requestList
-     * @param numberOfSlaves
-     * @throws IOException
-     * @throws UnknownHostException
-     */
-    public void sendRequest(AppReqList requestList, List<InetSocketAddress> slaves, int throughput) throws Exception {
+    public void send(HistoryMsg story, List<InetSocketAddress> slaves) throws Exception {
         for (InetSocketAddress nodeAddress : slaves) {
             Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
-            FromMaster msg = FromMaster.newBuilder().setReqListMsg(requestList).setThroughput(throughput).build();
+            FromMaster msg = FromMaster.newBuilder().setHistoryMsg(story).build();
             msg.writeDelimitedTo(s.getOutputStream());
             s.close();
         }
     }
 
-    public void sendFileName(String filename, List<InetSocketAddress> nodes, String serverUrl, int throughput) throws Exception {
+    public void send(FileMsg fileMsg, List<InetSocketAddress> nodes) throws Exception {
         for (InetSocketAddress nodeAddress : nodes) {
             Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
             // send filename
-            log.info("Sending notification of filename: " + filename);
-            FromMaster msg = FromMaster.newBuilder().setFilename(filename).setThroughput(throughput).setDestination(serverUrl).build();
+            FromMaster msg = FromMaster.newBuilder().setFileMsg(fileMsg).build();
             msg.writeDelimitedTo(s.getOutputStream());
 
-            // get ack
+            // get ack and send file if required
             AppAck ack = ToMaster.parseDelimitedFrom(s.getInputStream()).getAckMsg();
             if (ack.getStatus().equals(ResStatus.ERROR)) {
                 log.info("File does not exist in client, transfering...");
-                sendFile(filename, s);
+                sendFile(fileMsg.getFilename(), s);
             }
             s.close();
         }
@@ -114,12 +103,12 @@ public class Master {
      * 
      * @param logOptins Record on Disk
      */
-    public void start(StartOpt... logOptions) {
+    public void start() {
         for (InetSocketAddress nodeAddress : slavelist) {
             try {
                 log.info("Ordering node" + nodeAddress.getHostString() + ":" + nodeAddress.getPort() + " to start...");
                 Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
-                FromMaster msg = FromMaster.newBuilder().setStartMsg(AppStartMsg.newBuilder().addAllOpt(Arrays.asList(logOptions))).build();
+                FromMaster msg = FromMaster.newBuilder().setStart(true).build();
                 msg.writeDelimitedTo(s.getOutputStream());
                 s.close();
             } catch (UnknownHostException e) {

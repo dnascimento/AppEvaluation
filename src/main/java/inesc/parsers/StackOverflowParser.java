@@ -5,11 +5,11 @@ import inesc.slave.clients.ClientThread;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -22,21 +22,22 @@ public abstract class StackOverflowParser {
     RequestCreation creator;
     private static Logger log = Logger.getLogger(StackOverflowParser.class);
 
-    StackStatistics stats = new StackStatistics();
+    StackStatistics stats;
 
     ClientThread client;
     final String hostURL;
     Date parseStart = new Date();
 
 
-    public StackOverflowParser(File f, URL targetHost, ClientThread client) {
+    public StackOverflowParser(File f, HttpHost targetHost, ClientThread client, StackStatistics stats) {
         file = f;
         this.hostURL = targetHost.toString();
         creator = new RequestCreation();
         this.client = client;
+        this.stats = stats;
     }
 
-    public abstract long parseFile() throws Exception;
+    public abstract void parseFile() throws Exception;
 
     public HttpRequestBase newComment(String line) throws Exception {
         String questionId = getProperty(line, "QuestionId");
@@ -44,11 +45,13 @@ public abstract class StackOverflowParser {
         String author = getProperty(line, "Author");
         String date = getProperty(line, "Date");
         String text = getProperty(line, "Text");
-        log.debug("New Comment: " + questionId + " " + answerId + " " + author + " " + date);
+        // log.debug("New Comment: " + questionId + " " + answerId + " " + author + " " +
+        // date);
         boolean delete = (getProperty(line, "Delete") != null);
         boolean update = (getProperty(line, "Update") != null);
 
-        stats.newComment(text, date, author);
+        if (stats != null)
+            stats.newComment(text, date, author);
 
         text = StringEscapeUtils.escapeHtml4(text);
         text = StringEscapeUtils.escapeJson(text);
@@ -69,10 +72,12 @@ public abstract class StackOverflowParser {
         String questionId = getProperty(line, "QuestionId");
         String answerId = getProperty(line, "AnswerId");
         String date = getProperty(line, "Date");
-        log.debug("New Vote: " + questionId + " " + answerId + " " + date);
+        // log.debug("New Vote: " + questionId + " " + answerId + " " + date);
         boolean down = (getProperty(line, "Down") != null);
 
-        stats.newVotes(answerId);
+        if (stats != null)
+            stats.newVotes(answerId);
+
         if (down) {
             return creator.voteDown(hostURL, questionId, answerId);
         } else {
@@ -89,9 +94,12 @@ public abstract class StackOverflowParser {
         boolean delete = (getProperty(line, "Delete") != null);
         boolean update = (getProperty(line, "Update") != null);
 
-        log.debug("New Answer: " + questionId + " " + answerId + " " + author + " " + date);
+        // log.debug("New Answer: " + questionId + " " + answerId + " " + author + " " +
+        // date);
 
-        stats.newAnswer(text, date, author);
+        if (stats != null)
+            stats.newAnswer(text, date, author);
+
         text = StringEscapeUtils.escapeHtml4(text);
         text = StringEscapeUtils.escapeJson(text);
 
@@ -122,8 +130,11 @@ public abstract class StackOverflowParser {
         text = StringEscapeUtils.escapeHtml4(text);
         text = StringEscapeUtils.escapeJson(text);
 
-        stats.newQuestion(date, tags.split(","), text, new Integer(views), category, author);
-        log.debug("Question: " + questionId + " " + answerId + " " + author + " " + date + " " + views);
+        if (stats != null)
+            stats.newQuestion(date, tags.split(","), text, new Integer(views), category, author);
+
+        // log.debug("Question: " + questionId + " " + answerId + " " + author + " " +
+        // date + " " + views);
 
         if (delete) {
             return creator.deleteQuestion(hostURL, title);
@@ -136,11 +147,10 @@ public abstract class StackOverflowParser {
 
     }
 
-    public boolean execRequest(HttpRequestBase req) {
+    public void execRequest(HttpRequestBase req) {
         if (client != null) {
-            return client.execRequest(req);
+            client.execRequest(req);
         }
-        return false;
     }
 
     public static String getProperty(String line, String property) throws Exception {
@@ -166,11 +176,19 @@ public abstract class StackOverflowParser {
 
     protected String summary() throws FileNotFoundException {
         StringBuilder sb = new StringBuilder();
-        sb.append(stats.collect());
+        if (stats != null)
+            sb.append(stats.collect());
+
         sb.append("Duration (ms): " + (new Date().getTime() - parseStart.getTime()));
         return sb.toString();
     }
 
+    /**
+     * Main class to process the files and collect their statistics
+     * 
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         DOMConfigurator.configure("log4j.xml");
         log.setLevel(Level.ERROR);
@@ -182,10 +200,11 @@ public abstract class StackOverflowParser {
                 continue;
             }
             StackOverflowParser parser;
+            StackStatistics stats = new StackStatistics();
             if (f.getName().contains("perTopic")) {
-                parser = new ParsePerTopic(f, new URL("http://localhost:8080"), null);
+                parser = new ParsePerTopic(f, new HttpHost("localhost", 8080), null, stats);
             } else {
-                parser = new ParsePerDay(f, new URL("http://localhost:8080"), null);
+                parser = new ParsePerDay(f, new HttpHost("localhost", 8080), null, stats);
             }
             parser.parseFile();
         }

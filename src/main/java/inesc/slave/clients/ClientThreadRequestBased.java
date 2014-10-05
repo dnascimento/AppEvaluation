@@ -1,9 +1,5 @@
 package inesc.slave.clients;
 
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 import org.apache.http.client.methods.HttpRequestBase;
 
 public class ClientThreadRequestBased extends
@@ -13,25 +9,17 @@ public class ClientThreadRequestBased extends
     private HttpRequestBase[] history;
 
     /** How many times each request is performed */
-    private short[] historyCounter;
+    private long[] historyCounter;
 
 
     public ClientThreadRequestBased(HttpRequestBase[] history,
-            short[] historyCounter,
+            long[] counter,
             int clientID,
             ClientManager clientManager,
-            URL hostURL,
-            int throughput) {
-        super(clientID, hostURL, clientManager, throughput);
-
+            ClientConfiguration config) {
+        super(clientID, clientManager, config);
         this.history = history;
-        this.historyCounter = historyCounter;
-        for (int i = 0; i < historyCounter.length; i++) {
-            totalRequests += historyCounter[i];
-        }
-
-        executionTimes = new ArrayList<Short>((int) totalRequests);
-        responseData = new ArrayList<ByteBuffer>((int) totalRequests);
+        this.historyCounter = counter;
     }
 
     /**
@@ -39,22 +27,19 @@ public class ClientThreadRequestBased extends
      */
     @Override
     public void run() {
-        initStatistics();
-        log.info("Client" + clientID + "starting...");
+        log.info("Client" + clientId + "starting...");
+        Thread.currentThread().setName("RequestBased Thread " + clientId);
         for (int i = 0; i < history.length; i++) {
             HttpRequestBase req = history[i];
-
             while (historyCounter[i]-- > 0) {
                 execRequest(req);
-                // Delay the next request
-                try {
-                    sleep(ClientManager.DELAY_BETWEEN_REQUESTS);
-                } catch (InterruptedException e) {
-                    log.error(e);
-                }
             }
         }
-        collectStatistics();
+        try {
+            end();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // Free Memory (GB Collect later)
         history = null;
         historyCounter = null;

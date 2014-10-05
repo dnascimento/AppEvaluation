@@ -5,8 +5,8 @@ import inesc.slave.clients.ClientThread;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.net.URL;
 
+import org.apache.http.HttpHost;
 import org.apache.log4j.Logger;
 
 public class ParsePerTopic extends
@@ -15,13 +15,13 @@ public class ParsePerTopic extends
     private static Logger log = Logger.getLogger(ParsePerTopic.class);
 
 
-    public ParsePerTopic(File f, URL targetHost, ClientThread client) {
-        super(f, targetHost, client);
+    public ParsePerTopic(File f, HttpHost targetHost, ClientThread client, StackStatistics stats) {
+        super(f, targetHost, client, stats);
     }
 
 
     @Override
-    public long parseFile() throws Exception {
+    public void parseFile() throws Exception {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
         log.info("Parsing file: " + file.getAbsolutePath() + "...");
@@ -63,7 +63,5 @@ public class ParsePerTopic extends
             }
         }
         br.close();
-        log.fatal(summary());
-        return stats.total();
     }
 }

@@ -9,10 +9,10 @@ package inesc.master;
 
 
 import inesc.master.commands.AskIntBuffers;
-import inesc.master.commands.AskRequestStory;
-import inesc.shared.AppEvaluationProtos.AppReqList;
-import inesc.shared.AppEvaluationProtos.AppRequest;
-import inesc.shared.AppEvaluationProtos.AppStartMsg.StartOpt;
+import inesc.shared.AppEvaluationProtos.Configuration;
+import inesc.shared.AppEvaluationProtos.FileMsg;
+import inesc.shared.AppEvaluationProtos.HistoryMsg;
+import inesc.shared.AppEvaluationProtos.HistoryMsg.AppRequest;
 
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
@@ -58,28 +58,41 @@ public class Interface extends
                 System.out.println("b) Send file");
                 System.out.println("c) Start stories");
                 cmd = s.next();
-                int throughput;
+
+                Configuration.Builder config = Configuration.newBuilder();
+                System.out.println("Enter throughput:");
+                config.setThroughput(s.nextInt());
+
+                System.out.println("Assync? y/n");
+                config.setAssynchronous(s.nextLine().equals("y"));
+
+                System.out.println("Measure data received? y/n");
+                config.setMeasureDataReceived(s.nextLine().equals("y"));
+
+                System.out.println("Log to disk? y/n");
+                config.setLogToDisk(s.nextLine().equals("y"));
+
                 switch (cmd.charAt(0)) {
                 case 'a':
                     // Send the request list using puppet
-                    AppReqList story = newStory(s);
+                    HistoryMsg story = newStory(s, config);
                     if (story == null)
                         continue;
                     nodes = selectNodes(s);
-                    System.out.println("Enter throughput:");
-                    throughput = s.nextInt();
-                    master.sendRequest(story, nodes, throughput);
+                    master.send(story, nodes);
                     break;
                 case 'b':
+                    FileMsg.Builder msg = FileMsg.newBuilder();
+                    msg.setConfiguration(config);
+
                     System.out.println("Enter the file name:");
-                    String filename = s.next();
-                    System.out.println("Enter throughput:");
-                    throughput = s.nextInt();
+                    msg.setFilename(s.next());
+
                     nodes = selectNodes(s);
-                    master.sendFileName(filename, nodes, SERVER_URL, throughput);
+                    master.send(msg.build(), nodes);
                     break;
                 case 'c':
-                    master.start(StartOpt.Disk);
+                    master.start();
                     break;
                 }
             } catch (Exception e) {
@@ -89,45 +102,50 @@ public class Interface extends
 
     }
 
-    private AppReqList newStory(Scanner s) {
+    private HistoryMsg newStory(Scanner s, Configuration.Builder config) {
+        HistoryMsg.Builder msg = HistoryMsg.newBuilder();
+
+
         System.out.println("How many clients per node?");
-        int nNodes = s.nextInt();
+        msg.setNClients(s.nextInt());
+
         String randomText = getRandomText();
-        AppRequest req;
-        AskRequestStory story = new AskRequestStory(master);
+
+        AppRequest.Builder req;
         while (true) {
             System.out.println("a) New Question");
             System.out.println("b) New Answer");
             System.out.println("c) New Comment");
             System.out.println("e) End");
 
-            String cmd = s.next();
-            switch (cmd.charAt(0)) {
+            char cmd = s.next().charAt(0);
+            if (cmd == 'e')
+                break;
+
+            System.out.println("Number of times: ");
+            int nExec = s.nextInt();
+            switch (cmd) {
             case 'a':
                 lastTitle = getTitle();
-                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText, AUTHOR, "1", "1", null)
-                                   .setNExec(nNodes)
-                                   .build();
+                req = bufferCreator.postNewQuestion(SERVER_URL, lastTitle, tags, randomText, AUTHOR, "1", "1", null).setNExec(nExec);
                 System.out.println("New question");
                 break;
             case 'b':
-                req = bufferCreator.postAnswer(SERVER_URL, lastTitle, randomText, AUTHOR, null).setNExec(nNodes).build();
+                req = bufferCreator.postAnswer(SERVER_URL, lastTitle, randomText, AUTHOR, null).setNExec(nExec);
                 lastAnswerId = bufferCreator.generateAnswerId(lastTitle, AUTHOR, randomText);
                 System.out.println("New answer");
                 break;
             case 'c':
-                req = bufferCreator.postComment(SERVER_URL, lastTitle, lastAnswerId, randomText, AUTHOR).setNExec(nNodes).build();
+                req = bufferCreator.postComment(SERVER_URL, lastTitle, lastAnswerId, randomText, AUTHOR).setNExec(nExec);
                 System.out.println("New comment");
                 break;
-            case 'e':
-                return story.build(nNodes);
             default:
                 return null;
             }
-            story.addRequest(req);
+            msg.addRequests(req);
         }
+        return msg.build();
     }
-
 
     private String getRandomText() {
         String txt = loremIpsum.getWords(RANDOM_TEXT_SIZE, lorumPosition);
