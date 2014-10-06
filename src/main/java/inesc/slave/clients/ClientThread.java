@@ -118,11 +118,9 @@ public abstract class ClientThread extends
     public void end() throws Exception {
         // wait to finish the requests
         countDown.await();
-        // process the report
-        ThreadReport report = new ThreadReport(clientId, stats);
-
+        stats.over();
         // Store the report in controller to send later to master
-        clientManager.addReport(clientId, report);
+        clientManager.addStats(clientId, stats);
 
         System.out.println("Shutting down");
         httpclient.close();

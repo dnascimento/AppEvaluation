@@ -1,20 +1,22 @@
 package inesc.slave.clients;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Statistics {
     /** Collect the execution round trip time, negative if failed or cancelled */
-    public ArrayList<Integer> executionTimes;
+    public LinkedList<Integer> executionTimes;
 
     public long startExecution;
 
     public long dataReceived = 0;
     public int exceptionResponse = 0;
 
+    public long endExecution;
+
 
     public Statistics() {
         startExecution = System.nanoTime();
-        executionTimes = new ArrayList<Integer>();
+        executionTimes = new LinkedList<Integer>();
     }
 
     public synchronized void requestCompleted(long duration) {
@@ -33,6 +35,10 @@ public class Statistics {
     public synchronized void newResponse(int responseSize, boolean exception) {
         dataReceived += responseSize;
         exceptionResponse += (exception) ? 1 : 0;
+    }
+
+    public void over() {
+        endExecution = System.nanoTime();
     }
 
 

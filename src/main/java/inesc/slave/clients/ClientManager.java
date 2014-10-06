@@ -12,6 +12,7 @@ import inesc.slave.Slave;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.log4j.Logger;
@@ -36,7 +37,7 @@ public class ClientManager extends
 
 
     private final LinkedList<ClientThread> clientThreads = new LinkedList<ClientThread>();
-    private ThreadReport[] clientReports;
+    private Statistics[] clientStats;
     private int id;
     public final Slave slave;
 
@@ -49,14 +50,14 @@ public class ClientManager extends
     public void restart() {
         // TODO
         clientThreads.clear();
-        clientReports = null;
+        clientStats = null;
         id = 0;
     }
 
-    public void newFile(File f, ClientConfiguration config) {
-        ClientThread thread = new ClientThreadFileBased(id++, this, f, config);
+    public void newFile(List<File> filesToExec, ClientConfiguration config) {
+        ClientThread thread = new ClientThreadFileBased(id++, this, filesToExec, config);
         clientThreads.add(thread);
-        log.info("New Client using file " + f);
+        log.info("New Client using file " + filesToExec);
     }
 
     public void newHistory(HttpRequestBase[] history, long[] counter, ClientConfiguration config) {
@@ -74,8 +75,8 @@ public class ClientManager extends
     }
 
 
-    public void runSync() {
-        clientReports = new ThreadReport[id];
+    public Report runSync() {
+        clientStats = new Statistics[id];
         log.info("Starting " + clientThreads.size() + " clients....");
 
         // start the threads
@@ -94,16 +95,16 @@ public class ClientManager extends
 
         log.info("Clients done...");
 
+        Report report = new Report(clientStats);
         if (slave.masterIsAvailable) {
-            slave.sendReportToMaster(clientReports);
+            slave.sendReportToMaster(report);
         } else {
-            for (ThreadReport report : clientReports) {
-                System.out.println(report);
-            }
+            System.out.println(report);
         }
 
         // Clean the threads and connections
         this.restart();
+        return report;
     }
 
 
@@ -113,13 +114,11 @@ public class ClientManager extends
      * @param clientId
      * @param report
      */
-    public synchronized void addReport(int clientId, ThreadReport report) {
-        clientReports[clientId] = report;
+    public synchronized void addStats(int clientId, Statistics stat) {
+        clientStats[clientId] = stat;
     }
 
 
-    public ThreadReport[] getReports() {
-        return clientReports;
-    }
+
 
 }

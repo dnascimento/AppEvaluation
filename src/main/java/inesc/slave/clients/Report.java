@@ -12,25 +12,26 @@ import inesc.shared.AppEvaluationProtos.ReportAgregatedMsg.ThreadReportMsg;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Thread execution statistics
  * 
  * @author darionascimento
  */
-public class ThreadReport {
-    public long totalExecutionTime;
-    public int clientId, totalResponseLatency;
+public class Report {
+    public int totalExecutionTime;
+    public int totalResponseLatency;
     public double averageResponseTime, longest, shortest, percentil90, percentil95;
 
-    public long nTransactions, successTransactions, failTransactions;
+    public int nTransactions, successTransactions, failTransactions;
     public double transactionRate;
     private long dataReceived;
     private int exceptionResponse;
 
     private static final int TO_MILISECOND = 1000000;
 
-    public ThreadReport() {
+    public Report() {
 
     }
 
@@ -39,28 +40,38 @@ public class ThreadReport {
      * 
      * @param clientId
      */
-    public ThreadReport(int clientId, Statistics stats) {
-        totalExecutionTime = (System.nanoTime() - stats.startExecution) / TO_MILISECOND;
-        nTransactions = stats.executionTimes.size();
-        ArrayList<Integer> executionTimes = stats.executionTimes;
+    public Report(Statistics[] stats) {
+        if (stats.length == 0) {
+            throw new RuntimeException("No statistics to collect");
+        }
+
+        totalExecutionTime = ((int) ((System.nanoTime() - stats[0].startExecution) / TO_MILISECOND));
+
+        ArrayList<Integer> executionTimes = new ArrayList<Integer>();
+        for (Statistics s : stats) {
+            executionTimes.addAll(s.executionTimes);
+        }
+
+        nTransactions = executionTimes.size();
+
         longest = 0;
         shortest = Double.MAX_VALUE;
 
         for (int i = 0; i < nTransactions; i++) {
             // failed requests time counts too
-            double execTime = Math.abs(executionTimes.get(i) / TO_MILISECOND);
+            double absExecTime = Math.abs(executionTimes.get(i) / TO_MILISECOND);
 
-            totalResponseLatency += execTime;
+            totalResponseLatency += absExecTime;
 
             if (executionTimes.get(i) < 0) {
                 failTransactions++;
                 continue;
             }
-            if (longest < execTime) {
-                longest = execTime;
+            if (longest < absExecTime) {
+                longest = absExecTime;
             }
-            if (shortest > execTime) {
-                shortest = execTime;
+            if (shortest > absExecTime) {
+                shortest = absExecTime;
             }
         }
 
@@ -72,8 +83,12 @@ public class ThreadReport {
 
 
         transactionRate = (((double) nTransactions) / (totalExecutionTime) * 1000);
-        this.dataReceived = stats.dataReceived;
-        this.exceptionResponse = stats.exceptionResponse;
+        for (Statistics s : stats) {
+            this.dataReceived += s.dataReceived;
+            this.exceptionResponse += s.exceptionResponse;
+        }
+
+
 
 
         // set values for absolute
@@ -87,7 +102,7 @@ public class ThreadReport {
         this.percentil90 = calculatePercentil(executionTimes, 90) / TO_MILISECOND;
     }
 
-    private double calculatePercentil(ArrayList<Integer> array, int percentil) {
+    private double calculatePercentil(List<Integer> array, int percentil) {
         int n = array.size();
         double p = percentil / 100;
         int k = (int) ((n - 1) * p);
@@ -96,8 +111,8 @@ public class ThreadReport {
         return array.get(k + 1) + d * (array.get(k + 2) - array.get(k + 1));
     }
 
-    public static ThreadReport fromProtBuffer(ThreadReportMsg msg) {
-        ThreadReport report = new ThreadReport();
+    public static Report fromProtBuffer(ThreadReportMsg msg) {
+        Report report = new Report();
         report.averageResponseTime = msg.getAverageResponseTime();
         report.dataReceived = msg.getDataReceived();
         report.failTransactions = msg.getFailTransactions();
@@ -158,5 +173,4 @@ public class ThreadReport {
 
         return sb.toString();
     }
-
 }

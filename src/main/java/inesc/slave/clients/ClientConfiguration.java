@@ -11,7 +11,6 @@ public class ClientConfiguration {
     final boolean logToDisk;
     final boolean measureDataReceived;
 
-
     public ClientConfiguration(Configuration configuration) {
         this.target = new HttpHost(configuration.getTarget());
         this.throughput = configuration.getThroughput();

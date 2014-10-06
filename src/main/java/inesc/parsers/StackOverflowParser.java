@@ -6,7 +6,9 @@ import inesc.slave.clients.ClientThread;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.HttpHost;
@@ -18,7 +20,7 @@ import org.apache.log4j.xml.DOMConfigurator;
 import com.google.common.io.BaseEncoding;
 
 public abstract class StackOverflowParser {
-    File file;
+    List<File> files;
     RequestCreation creator;
     private static Logger log = Logger.getLogger(StackOverflowParser.class);
 
@@ -29,8 +31,8 @@ public abstract class StackOverflowParser {
     Date parseStart = new Date();
 
 
-    public StackOverflowParser(File f, HttpHost targetHost, ClientThread client, StackStatistics stats) {
-        file = f;
+    public StackOverflowParser(List<File> filesToExec, HttpHost targetHost, ClientThread client, StackStatistics stats) {
+        files = filesToExec;
         this.hostURL = targetHost.toString();
         creator = new RequestCreation();
         this.client = client;
@@ -195,19 +197,21 @@ public abstract class StackOverflowParser {
         System.out.println("start at " + new Date());
         File dir = new File("/Users/darionascimento/git/AppEvaluation/slave/");
 
+        List<File> files = new ArrayList<File>();
         for (File f : dir.listFiles()) {
             if (f.getName().startsWith(".")) {
                 continue;
             }
-            StackOverflowParser parser;
-            StackStatistics stats = new StackStatistics();
-            if (f.getName().contains("perTopic")) {
-                parser = new ParsePerTopic(f, new HttpHost("localhost", 8080), null, stats);
-            } else {
-                parser = new ParsePerDay(f, new HttpHost("localhost", 8080), null, stats);
-            }
-            parser.parseFile();
+            files.add(f);
         }
+        StackOverflowParser parser;
+        StackStatistics stats = new StackStatistics();
+        if (files.get(0).getName().contains("perTopic")) {
+            parser = new ParsePerTopic(files, new HttpHost("localhost", 8080), null, stats);
+        } else {
+            parser = new ParsePerDay(files, new HttpHost("localhost", 8080), null, stats);
+        }
+        parser.parseFile();
         System.out.println("Done at " + new Date());
     }
 

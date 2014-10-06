@@ -117,8 +117,7 @@ public class SlaveService extends
 
         // create the clients
         for (i = 0; i < nClients; i++) {
-            long[] counter = Arrays.copyOf(historyCounter, historyCounter.length);
-            slave.newHistory(history, counter, config);
+            slave.newHistory(history, historyCounter, config);
         }
     }
 
@@ -145,7 +144,8 @@ public class SlaveService extends
             transferFile(f, s);
             log.info("File transfered with success");
         }
-        slave.newFile(f, clientConfiguration);
+        // TODO support multiple files
+        slave.newFile(Arrays.asList(f), clientConfiguration);
     }
 
 

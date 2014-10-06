@@ -6,7 +6,7 @@ import inesc.shared.AppEvaluationProtos.ToMaster;
 import inesc.shared.AppEvaluationProtos.ToMaster.SlaveID;
 import inesc.slave.clients.ClientConfiguration;
 import inesc.slave.clients.ClientManager;
-import inesc.slave.clients.ThreadReport;
+import inesc.slave.clients.Report;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.http.client.methods.HttpRequestBase;
@@ -88,22 +90,22 @@ public class Slave {
     }
 
 
-    public void startSync() {
-        clientManager.runSync();
+    public Report startSync() {
+        Report report = clientManager.runSync();
         service.end();
+        return report;
     }
 
     /**
      * Send the reports to master
      */
-    public void sendReportToMaster(ThreadReport[] clientReports) {
+    public void sendReportToMaster(Report clientReports) {
         if (masterAddress != null) {
             try {
                 Socket s = new Socket(masterAddress.getAddress(), masterAddress.getPort());
                 ReportAgregatedMsg.Builder bd = ReportAgregatedMsg.newBuilder();
-                for (int i = 0; i < clientReports.length; i++) {
-                    bd.addReports(clientReports[i].toProtBuffer());
-                }
+                bd.addReports(clientReports.toProtBuffer());
+
                 ReportAgregatedMsg msg = bd.build();
                 newToMaster().setReportMsg(msg).build().writeDelimitedTo(s.getOutputStream());
                 s.close();
@@ -111,18 +113,9 @@ public class Slave {
                 log.error(e);
             }
         }
-        showReports(clientReports);
         clientManager = new ClientManager(this);
     }
 
-    /**
-     * List all reports
-     */
-    private void showReports(ThreadReport[] clientReports) {
-        for (int i = 0; i < clientReports.length; i++) {
-            log.info(clientReports[i]);
-        }
-    }
 
 
     /**
@@ -152,12 +145,13 @@ public class Slave {
     }
 
 
-    public void newFile(File f, ClientConfiguration conf) {
-        clientManager.newFile(f, conf);
+    public void newFile(List<File> filesToExec, ClientConfiguration conf) {
+        clientManager.newFile(filesToExec, conf);
     }
 
     public void newHistory(HttpRequestBase[] history, long[] counter, ClientConfiguration conf) {
-        clientManager.newHistory(history, counter, conf);
+        long[] counterCopy = Arrays.copyOf(counter, counter.length);
+        clientManager.newHistory(history, counterCopy, conf);
     }
 
 

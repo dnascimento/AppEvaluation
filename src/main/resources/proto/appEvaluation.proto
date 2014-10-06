@@ -24,17 +24,16 @@ message ReportAgregatedMsg{
 	repeated ThreadReportMsg reports = 1;
 
 	message ThreadReportMsg{
-		optional int64 nTransactions = 1;
-		optional int64 successTransactions = 2;
+		optional int32 nTransactions = 1;
+		optional int32 successTransactions = 2;
 		optional double averageResponseTime = 3;
 		optional double transactionRate = 4;
 		optional double longest = 5;
 		optional double shortest = 6;
 		optional int32 totalTransferingTime = 7;
-		optional int64 failTransactions = 8;
-		optional int64 totalExecutionTime = 9;
+		optional int32 failTransactions = 8;
+		optional int32 totalExecutionTime = 9;
 		optional int64 dataReceived = 10;
-		optional int32 clientID = 11;
 		optional int32 exceptionResponse = 12;
 		optional double percentil90 = 13;
 		optional double percentil95 = 14;

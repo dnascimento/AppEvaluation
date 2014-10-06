@@ -5,19 +5,20 @@ import inesc.parsers.ParsePerTopic;
 import inesc.parsers.StackOverflowParser;
 
 import java.io.File;
+import java.util.List;
 
 public class ClientThreadFileBased extends
         ClientThread {
 
     StackOverflowParser parser;
 
-    public ClientThreadFileBased(int clientId, ClientManager clientManager, File f, ClientConfiguration config) {
+    public ClientThreadFileBased(int clientId, ClientManager clientManager, List<File> filesToExec, ClientConfiguration config) {
         super(clientId, clientManager, config);
 
-        if (isTimeOrdered(f.getName())) {
-            parser = new ParsePerDay(f, config.target, this, null);
+        if (isTimeOrdered(filesToExec.get(0).getName())) {
+            parser = new ParsePerDay(filesToExec, config.target, this, null);
         } else {
-            parser = new ParsePerTopic(f, config.target, this, null);
+            parser = new ParsePerTopic(filesToExec, config.target, this, null);
         }
     }
 
