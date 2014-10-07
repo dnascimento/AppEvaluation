@@ -79,7 +79,7 @@ public class Report {
 
         successTransactions = nTransactions - failTransactions;
         if (successTransactions > 0)
-            averageResponseTime = (totalResponseLatency / successTransactions);
+            averageResponseTime = (((double) totalResponseLatency) / successTransactions);
         else
             averageResponseTime = 0;
 

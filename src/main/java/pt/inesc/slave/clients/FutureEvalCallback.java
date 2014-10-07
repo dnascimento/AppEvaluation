@@ -47,9 +47,9 @@ public class FutureEvalCallback
     @Override
     public void failed(Exception ex) {
         latch.countDown();
-        ex.printStackTrace();
         long duration = (System.nanoTime() - start);
-        System.out.println(request.getRequestLine() + "->" + ex);
+
+        System.out.println(request.getRequestLine() + "-> timeout");
         stats.requestFailed(duration);
     }
 

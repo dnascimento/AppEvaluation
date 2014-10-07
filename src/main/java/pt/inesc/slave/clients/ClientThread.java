@@ -45,7 +45,7 @@ public abstract class ClientThread extends
     private long currentSecound = 0;
     private long delay;
     private final double THROUGHPUT_MARGIN = 0.1;
-    private static final int TIMEOUT = 100;
+    private static final int TIMEOUT = 2000;
     private static final String USER_AGENT = "Shuttle";
 
     /**

@@ -52,12 +52,13 @@ public class EvalMain {
             target = new HttpHost(args[0].split(":")[0], Integer.parseInt(args[0].split(":")[1]));
             while (i < args.length) {
                 String op = args[i++];
-                if (!op.startsWith("--")) {
+                if (!(op.startsWith("--") || op.startsWith("-"))) {
                     throw new Exception("Wrong argument parsed: " + op);
                 }
-                op = op.replace("--", "");
+                op = op.replaceAll("-", "");
 
                 switch (op) {
+                case "t":
                 case "throughput":
                     // throughput
                     System.out.println("Throughput " + args[i]);
@@ -89,6 +90,7 @@ public class EvalMain {
                     System.out.println("Log to disk");
                     logToDisk = true;
                     break;
+                case "c":
                 case "clients":
                     System.out.println("Number of clients " + args[i]);
                     clients = Integer.valueOf(args[i++]);
