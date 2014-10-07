@@ -138,36 +138,33 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<configuration>
-						<archive>
-							<manifest>
-								<mainClass>inesc.master.MasterMain</mainClass>
-								<packageName>inesc.master</packageName>
-							</manifest>
-							<manifestEntries>
-								<mode>development</mode>
-								<url>${project.url}</url>
-							</manifestEntries>
-						</archive>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>exec-maven-plugin</artifactId>
-					<version>1.2.1</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>java</goal>
-							</goals>
-							<configuration>
-								<mainClass>inesc.master.MasterMain</mainClass>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
+					<!-- mvn assembly:assembly -DdescriptorId=appEval.jar -->
+			      <artifactId>maven-assembly-plugin</artifactId>
+			      <configuration>
+			        <archive>
+			          <manifest>
+			            <mainClass>pt.inesc.slave.SlaveMain</mainClass>
+			          </manifest>
+			        </archive>
+			        <descriptorRefs>
+			          <descriptorRef>jar-with-dependencies</descriptorRef>
+			        </descriptorRefs>
+			      </configuration>
+			    </plugin>
+			    <plugin>
+			      <!-- Build an executable JAR -->
+			      <groupId>org.apache.maven.plugins</groupId>
+			      <artifactId>maven-jar-plugin</artifactId>
+			      <version>2.4</version>
+			      <configuration>
+			        <archive>
+			          <manifest>
+			            <addClasspath>true</addClasspath>
+			            <mainClass>pt.inesc.slave.SlaveMain</mainClass>
+			          </manifest>
+			        </archive>
+			      </configuration>
+			    </plugin>
 				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>

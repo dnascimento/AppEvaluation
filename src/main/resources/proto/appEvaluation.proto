@@ -6,38 +6,30 @@ option java_outer_classname = "AppEvaluationProtos";
 
 
 message ToMaster{
-	message SlaveID{
-		required string host = 1;
-		required int32 port = 2;
-	}
 	//identify the source
-	required SlaveID slaveId = 1;
-	//to registry the node
-	optional bool registry = 2;
+	required string slaveHost = 1;
 	//to send a report
-	optional ReportAgregatedMsg reportMsg = 3;
+	optional ThreadReportMsg reportMsg = 2;
 	//to ack
-	optional AppAck ackMsg = 4;
+	optional AppAck ackMsg = 3;
 }
 
-message ReportAgregatedMsg{
-	repeated ThreadReportMsg reports = 1;
 
-	message ThreadReportMsg{
-		optional int32 nTransactions = 1;
-		optional int32 successTransactions = 2;
-		optional double averageResponseTime = 3;
-		optional double transactionRate = 4;
-		optional double longest = 5;
-		optional double shortest = 6;
-		optional int32 totalTransferingTime = 7;
-		optional int32 failTransactions = 8;
-		optional int32 totalExecutionTime = 9;
-		optional int64 dataReceived = 10;
-		optional int32 exceptionResponse = 12;
-		optional double percentil90 = 13;
-		optional double percentil95 = 14;
-	}
+message ThreadReportMsg{
+	required int32 nTransactions = 1;
+	required int32 successTransactions = 2;
+	required double averageResponseTime = 3;
+	required double transactionRate = 4;
+	required double longest = 5;
+	required double shortest = 6;
+	required int32 totalTransferingTime = 7;
+	required int32 failTransactions = 8;
+	required int32 totalExecutionTime = 9;
+	required int64 dataReceived = 10;
+	required int32 exceptionResponse = 12;
+	required double percentil90 = 13;
+	required double percentil95 = 14;
+	required string hostId = 15;
 }
 
 message AppAck{
@@ -63,9 +55,10 @@ message AppAck{
 
 
 message FromMaster{
-	optional bool start = 1;
-	optional HistoryMsg historyMsg = 2;
-	optional FileMsg fileMsg = 3;
+	required string masterHost = 1;
+	optional bool start = 2;
+	optional HistoryMsg historyMsg = 3;
+	optional FileMsg fileMsg = 4;
 }
 
 
@@ -73,13 +66,15 @@ message Configuration{
 	required string target = 1;
 	required int32 throughput = 2;
 	required bool assynchronous = 3;
-	required bool measureDataReceived = 4;
-	required bool logToDisk = 5;
+	required bool logToDisk = 4;
 }
 
 message FileMsg{
-	required string filename = 1;
-	required Configuration configuration = 2;
+	repeated string filename = 1;
+	required int32 numberOfLines = 2;
+	required double readPercentage = 3;
+	required bool perTopic = 4;
+	required Configuration configuration = 5;
 }
 
 
@@ -102,33 +97,8 @@ message HistoryMsg {
 
   	required ReqType type = 1;
   	required string url = 2;
-  	required int64 nExec = 3;
+  	required int32 nExec = 3;
   	repeated Parameter parameters = 4;
   	optional string contentType = 5;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

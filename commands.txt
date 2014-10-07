@@ -1,0 +1,43 @@
+#get the index X times
+java -jar tester.jar server:8080  -g /index.html 100000
+
+
+
+
+
+
+
+
+
+
+
+
+#run the files
+java -jar tester.jar server:8080 -f small.txt 
+
+
+#files independent
+java -jar tester.jar server:8080 --p .*.txt  
+
+
+java -jar tester.jar server:8080  --file-parallel .*.txt --perTopic
+
+
+for f in *; do mv $f `basename $f `.txt; done;
+
+
+
+ --throughput  throughput per client: fixed; [start:end:step]; default: maximum  
+  --file <filePattern> in serie 
+  --file-parallel <filePattern> files are executed in parallel 
+--lines <numberOfLines> 
+--readPercentage <percentage of read operation: default: 0> 
+--assync  assync: default is sync 
+--get <url> <times>  get the url x times 
+--master <master_host> 
+--clients <number of concurrent clients> 
+--logDisk log to disk 
+ --measureData measure data received 
+ --directory directory 
+ --perTopic 
+
