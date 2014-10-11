@@ -71,13 +71,11 @@ public class Interface extends
                 System.out.println("Assync? y/n");
                 boolean asynchronous = s.nextLine().equals("y");
 
-                System.out.println("Measure data received? y/n");
-                boolean measureDataReceived = s.nextLine().equals("y");
 
                 System.out.println("Log to disk? y/n");
                 boolean logToDisk = s.nextLine().equals("y");
 
-                ClientConfiguration config = new ClientConfiguration(target, throughput, asynchronous, logToDisk, measureDataReceived);
+                ClientConfiguration config = new ClientConfiguration(target, throughput, asynchronous, logToDisk);
 
 
                 switch (cmd.charAt(0)) {
@@ -106,7 +104,10 @@ public class Interface extends
                     double readPercentage = s.nextDouble();
                     System.out.println("Is the file ordered per topic? y/n");
                     boolean perTopic = (s.next().toCharArray()[0] == 'y');
-                    master.newFile(files, config, numberOfLines, readPercentage, perTopic);
+
+                    System.out.println("Exec every file in parallel? y/n");
+                    boolean parallel = (s.next().toCharArray()[0] == 'y');
+                    master.newFile(files, config, numberOfLines, readPercentage, perTopic, parallel);
                     break;
                 case 'c':
                     master.startExec();

@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.HttpHost;
@@ -37,6 +38,9 @@ public abstract class StackOverflowParser {
     int nWrites;
     ReadTracker questionsToRead;
 
+    AtomicBoolean stop = new AtomicBoolean(false);
+
+
     public StackOverflowParser(List<File> filesToExec,
             HttpHost targetHost,
             ClientThread client,
@@ -59,11 +63,11 @@ public abstract class StackOverflowParser {
     public abstract void parseFile() throws Exception;
 
     public HttpRequestBase newComment(String line) throws Exception {
-        String questionId = getProperty(line, "QuestionId");
+        String questionId = cleanText(getProperty(line, "QuestionId"));
         String answerId = getProperty(line, "AnswerId");
         String author = getProperty(line, "Author");
         String date = getProperty(line, "Date");
-        String text = getProperty(line, "Text");
+        String text = cleanText(getProperty(line, "Text"));
         // log.debug("New Comment: " + questionId + " " + answerId + " " + author + " " +
         // date);
         boolean delete = (getProperty(line, "Delete") != null);
@@ -78,6 +82,11 @@ public abstract class StackOverflowParser {
         byte[] digest = md.digest((answerId + author + text).getBytes());
         String commentId = BaseEncoding.base64().encode(digest);
 
+        if (questionId == null) {
+            return null;
+        }
+
+
         if (delete) {
             return creator.deleteComment(hostURL, questionId, answerId, commentId);
         }
@@ -87,8 +96,15 @@ public abstract class StackOverflowParser {
         return creator.postComment(hostURL, questionId, answerId, text, author);
     }
 
+    private String cleanText(String property) {
+        if (property == null) {
+            return null;
+        }
+        return property.replaceAll("[^A-Za-z0-9 ]", "a");
+    }
+
     public HttpRequestBase newVote(String line) throws Exception {
-        String questionId = getProperty(line, "QuestionId");
+        String questionId = cleanText(getProperty(line, "QuestionId"));
         String answerId = getProperty(line, "AnswerId");
         String date = getProperty(line, "Date");
         // log.debug("New Vote: " + questionId + " " + answerId + " " + date);
@@ -96,6 +112,11 @@ public abstract class StackOverflowParser {
 
         if (stats != null)
             stats.newVotes(answerId);
+
+        if (questionId == null) {
+            return null;
+        }
+
 
         if (down) {
             return creator.voteDown(hostURL, questionId, answerId);
@@ -105,11 +126,11 @@ public abstract class StackOverflowParser {
     }
 
     public HttpRequestBase newAnswer(String line) throws Exception {
-        String questionId = getProperty(line, "QuestionId");
+        String questionId = cleanText(getProperty(line, "QuestionId"));
         String answerId = getProperty(line, "AnswerId");
         String author = getProperty(line, "Author");
         String date = getProperty(line, "Date");
-        String text = getProperty(line, "Text");
+        String text = cleanText(getProperty(line, "Text"));
         boolean delete = (getProperty(line, "Delete") != null);
         boolean update = (getProperty(line, "Update") != null);
 
@@ -121,6 +142,10 @@ public abstract class StackOverflowParser {
 
         text = StringEscapeUtils.escapeHtml4(text);
         text = StringEscapeUtils.escapeJson(text);
+        if (questionId == null) {
+            return null;
+        }
+
 
         if (delete) {
             return creator.deleteAnswer(hostURL, questionId, answerId);
@@ -133,17 +158,17 @@ public abstract class StackOverflowParser {
     }
 
     public HttpRequestBase newQuestion(String line, String category) throws Exception {
-        String title = getProperty(line, "Title");
+        String title = cleanText(getProperty(line, "Title"));
         String tags = getProperty(line, "Tags");
         boolean delete = (getProperty(line, "Delete") != null);
         boolean update = (getProperty(line, "Update") != null);
 
 
-        String questionId = getProperty(line, "QuestionId");
+        // String questionId = cleanText(getProperty(line, "QuestionId"));
         String answerId = getProperty(line, "AnswerId");
         String author = getProperty(line, "Author");
         String date = getProperty(line, "Date");
-        String text = getProperty(line, "Text");
+        String text = cleanText(getProperty(line, "Text"));
         String views = getProperty(line, "Views");
 
         text = StringEscapeUtils.escapeHtml4(text);
@@ -152,8 +177,10 @@ public abstract class StackOverflowParser {
         if (stats != null)
             stats.newQuestion(date, tags.split(","), text, new Integer(views), category, author);
 
-        // log.debug("Question: " + questionId + " " + answerId + " " + author + " " +
-        // date + " " + views);
+        if (title == null) {
+            return null;
+        }
+
 
         if (delete) {
             return creator.deleteQuestion(hostURL, title);
@@ -215,7 +242,7 @@ public abstract class StackOverflowParser {
         DOMConfigurator.configure("log4j.xml");
         log.setLevel(Level.ERROR);
         System.out.println("start at " + new Date());
-        File dir = new File("/Users/darionascimento/git/AppEvaluation/slave/");
+        File dir = new File("/Users/darionascimento/dataDisk/20million/merge");
 
         List<File> files = new ArrayList<File>();
         for (File f : dir.listFiles()) {
@@ -232,9 +259,9 @@ public abstract class StackOverflowParser {
             parser = new ParsePerDay(files, new HttpHost("localhost", 8080), null, stats, ClientConfiguration.ALL_LINES, 0);
         }
         parser.parseFile();
+        System.out.println(stats.collect());
         System.out.println("Done at " + new Date());
     }
-
 
     void performReads() {
         if (questionsToRead.isEmpty()) {
@@ -246,5 +273,9 @@ public abstract class StackOverflowParser {
             String s = it.next();
             execRequest(creator.getQuestion(hostURL, s));
         }
+    }
+
+    public void over() {
+        stop.set(true);
     }
 }

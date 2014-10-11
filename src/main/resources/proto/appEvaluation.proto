@@ -12,6 +12,8 @@ message ToMaster{
 	optional ThreadReportMsg reportMsg = 2;
 	//to ack
 	optional AppAck ackMsg = 3;
+	//to transfer a file
+	optional string transferFile = 4;
 }
 
 
@@ -75,6 +77,7 @@ message FileMsg{
 	required double readPercentage = 3;
 	required bool perTopic = 4;
 	required Configuration configuration = 5;
+	required bool parallel = 6;
 }
 
 

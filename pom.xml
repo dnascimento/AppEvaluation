@@ -143,7 +143,7 @@
 			      <configuration>
 			        <archive>
 			          <manifest>
-			            <mainClass>pt.inesc.slave.SlaveMain</mainClass>
+			            <mainClass>pt.inesc.master.EvalMain</mainClass>
 			          </manifest>
 			        </archive>
 			        <descriptorRefs>

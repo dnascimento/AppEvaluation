@@ -25,6 +25,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -111,7 +112,7 @@ public class Master {
     }
 
 
-    private void sendFile(String filename, Socket s) throws Exception {
+    void sendFile(String filename, Socket s) throws Exception {
         // read file
         FileReader fr = null;
         try {
@@ -175,22 +176,41 @@ public class Master {
 
 
 
+    // Files podem ser em sequencia ou em paralelo.
 
 
 
 
+    public void newFile(
+            List<File> fileNames,
+                ClientConfiguration config,
+                Integer numberOfLines,
+                double readPercentage,
+                boolean perTopic,
+                boolean fileParallel) throws Exception {
 
-    public void newFile(List<File> fileNames, ClientConfiguration config, Integer numberOfLines, double readPercentage, boolean perTopic) throws Exception {
-        FileMsg.Builder fileMsg = FileMsg.newBuilder()
-                                         .setConfiguration(config.toProtoBuf())
-                                         .setNumberOfLines(numberOfLines)
-                                         .setReadPercentage(readPercentage)
-                                         .setPerTopic(perTopic);
-        for (File f : fileNames) {
-            fileMsg.addFilename(f.getName());
+        List<List<File>> filesPerNode = new ArrayList<List<File>>();
+        if (fileParallel) {
+            splitFileList(fileNames, slaves.size(), filesPerNode);
+        } else {
+            filesPerNode.add(fileNames);
         }
 
+        Iterator<List<File>> it = filesPerNode.iterator();
         for (InetSocketAddress nodeAddress : slaves) {
+
+
+            FileMsg.Builder fileMsg = FileMsg.newBuilder()
+                                             .setConfiguration(config.toProtoBuf())
+                                             .setNumberOfLines(numberOfLines)
+                                             .setReadPercentage(readPercentage)
+                                             .setPerTopic(perTopic)
+                                             .setParallel(fileParallel);
+
+            for (File f : it.next()) {
+                fileMsg.addFilename(f.getName());
+            }
+
             Socket s = new Socket(nodeAddress.getAddress(), nodeAddress.getPort());
             // send filename
             FromMaster msg = FromMaster.newBuilder().setMasterHost(master_address.getHostName()).setFileMsg(fileMsg).build();
@@ -198,13 +218,27 @@ public class Master {
 
             // get ack and send file if required
             AppAck ack = ToMaster.parseDelimitedFrom(s.getInputStream()).getAckMsg();
-            if (ack.getStatus().equals(ResStatus.ERROR)) {
-                log.info("File does not exist in client, transfering...");
-                sendFile(ack.getText(), s);
+            if (ack.getStatus().equals(ResStatus.OK)) {
+                log.info("Error happened");
             }
+
             s.close();
         }
     }
+
+    private void splitFileList(List<File> fileNames, int nNodes, List<List<File>> filesPerNode) {
+        int size = fileNames.size() / nNodes;
+        List<File> list = new ArrayList<File>(size);
+        for (File f : fileNames) {
+            if (list.size() == size) {
+                filesPerNode.add(list);
+                list = new ArrayList<File>(size);
+            }
+            list.add(f);
+        }
+        filesPerNode.add(list);
+    }
+
 
     public void newRequests(List<AppRequest> requests, ClientConfiguration config, int numberOfClients) throws IOException {
         HistoryMsg story = HistoryMsg.newBuilder()

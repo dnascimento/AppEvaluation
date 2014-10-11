@@ -26,7 +26,7 @@ public class Report {
 
     public int nTransactions, successTransactions, failTransactions;
     public double transactionRate;
-    private long dataReceived;
+    public long dataReceived;
     private int exceptionResponse;
     private String hostId;
 

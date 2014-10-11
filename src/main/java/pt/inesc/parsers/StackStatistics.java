@@ -192,7 +192,7 @@ public class StackStatistics {
     public String collect() throws FileNotFoundException {
         total();
         StringBuilder sb = new StringBuilder();
-
+        sb.append("Total requests: " + (totalQuestions + totalAnswers + totalComments + totalVotes) + "\n");
         sb.append("\n Total authors: " + authors.size() + "\n");
         sb.append("Total categories: " + categories.size() + "\n");
         sb.append("Total tags: " + tags.size() + "\n");

@@ -23,7 +23,7 @@ public class Slave {
     private static Logger log = Logger.getLogger(Slave.class);
 
 
-    private InetSocketAddress masterAddress = null;
+    InetSocketAddress masterAddress = null;
     public InetSocketAddress myAddress;
 
     /** Slave port */
@@ -89,8 +89,20 @@ public class Slave {
     }
 
 
-    public void newFile(List<File> filesToExec, ClientConfiguration conf, Integer numberOfLines, double readPercentage, boolean perTopic) {
-        clientManager.newFile(filesToExec, conf, numberOfLines, readPercentage, perTopic);
+    public void newFile(
+            List<File> filesToExec,
+                ClientConfiguration conf,
+                Integer numberOfLines,
+                double readPercentage,
+                boolean perTopic,
+                boolean parallel) {
+        if (parallel) {
+            for (File f : filesToExec) {
+                clientManager.newFile(Arrays.asList(f), conf, numberOfLines, readPercentage, perTopic);
+            }
+        } else {
+            clientManager.newFile(filesToExec, conf, numberOfLines, readPercentage, perTopic);
+        }
     }
 
     public void newHistory(HttpRequestBase[] history, long[] counter, ClientConfiguration conf) {

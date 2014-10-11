@@ -41,6 +41,8 @@ public class ClientManager extends
     private int id;
     public final Slave slave;
 
+    private final boolean forceOver = false;
+
 
     public ClientManager(Slave slave) {
         restart();
@@ -84,6 +86,21 @@ public class ClientManager extends
             thread.start();
         }
 
+        if (forceOver) {
+            synchronized (this) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            for (ClientThread thread : clientThreads) {
+                if (thread.isAlive()) {
+                    thread.over();
+                }
+            }
+        }
+
         // join the threads
         for (ClientThread thread : clientThreads) {
             try {
@@ -92,6 +109,7 @@ public class ClientManager extends
                 log.error("Interrupted Execution" + e);
             }
         }
+
 
         log.info("Clients done...");
 
@@ -103,7 +121,6 @@ public class ClientManager extends
         return report;
     }
 
-
     /**
      * Add report after execution (invoked per thread)
      * 
@@ -112,6 +129,10 @@ public class ClientManager extends
      */
     public synchronized void addStats(int clientId, Statistics stat) {
         clientStats[clientId] = stat;
+        if (forceOver) {
+            this.notifyAll();
+            System.out.println("Wake the main to kill all");
+        }
     }
 
 

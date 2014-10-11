@@ -48,7 +48,10 @@ public class ClientThreadFileBased extends
     }
 
 
-
+    @Override
+    public void over() {
+        parser.over();
+    }
 
 
 }

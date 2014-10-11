@@ -31,7 +31,7 @@ public class ParsePerTopic extends
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line;
             log.info("Parsing file: " + file.getAbsolutePath() + "...");
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null & !stop.get()) {
                 if (line.length() == 0) {
                     continue;
                 }

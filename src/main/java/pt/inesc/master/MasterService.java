@@ -38,19 +38,23 @@ public class MasterService extends
             try {
                 s = server.accept();
                 process(s);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error(e);
             }
         }
     }
 
-    private void process(Socket s) throws IOException {
+    private void process(Socket s) throws Exception {
         ToMaster msgEnvelop = ToMaster.parseDelimitedFrom(s.getInputStream());
         if (msgEnvelop == null) {
             return;
         }
 
-
+        if (msgEnvelop.hasTransferFile()) {
+            String file = msgEnvelop.getTransferFile();
+            master.sendFile(file, s);
+            return;
+        }
 
         if (msgEnvelop.hasReportMsg()) {
             master.addReport(Report.fromProtBuffer(msgEnvelop.getReportMsg()), msgEnvelop.getSlaveHost());

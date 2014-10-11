@@ -85,7 +85,8 @@ public class SlaveService extends
                           new ClientConfiguration(m.getConfiguration()),
                           m.getNumberOfLines(),
                           m.getReadPercentage(),
-                          m.getPerTopic());
+                          m.getPerTopic(),
+                          m.getParallel());
         }
 
 
@@ -145,35 +146,43 @@ public class SlaveService extends
                 ClientConfiguration clientConfiguration,
                 int numberOfLines,
                 double readPercentage,
-                boolean perTopic) throws IOException {
+                boolean perTopic,
+                boolean parallel) throws IOException {
         log.info("new file to exec " + list);
         File dir = new File(BASE_DIR);
         List<File> listOfFiles = new ArrayList<File>(list.size());
+        AppAck msg;
+        try {
+            // Transfer the files
+            for (String filename : list) {
+                File f = new File(dir, filename);
 
-        // Transfer the files
-        for (String filename : list) {
-            File f = new File(dir, filename);
-            if (f.exists()) {
-                log.info("file exists");
-                AppAck msg = AppAck.newBuilder().setStatus(ResStatus.OK).setText(filename).build();
-                slave.newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-            } else {
-                // needs the file, ask for transfer
-                AppAck msg = AppAck.newBuilder().setStatus(ResStatus.ERROR).setText(filename).build();
-                slave.newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
-                transferFile(f, s);
-                log.info("File transfered with success");
+                if (!f.exists()) {
+                    transferFileFromMaster(f);
+                    log.info("File transfered with success");
+                }
+                listOfFiles.add(f);
             }
-            listOfFiles.add(f);
-        }
 
-        slave.newFile(listOfFiles, clientConfiguration, numberOfLines, readPercentage, perTopic);
+            slave.newFile(listOfFiles, clientConfiguration, numberOfLines, readPercentage, perTopic, parallel);
+
+            msg = AppAck.newBuilder().setStatus(ResStatus.OK).setText("Thread files created").build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            msg = AppAck.newBuilder().setStatus(ResStatus.ERROR).setText(e.getMessage()).build();
+
+        }
+        slave.newToMaster().setAckMsg(msg).build().writeDelimitedTo(s.getOutputStream());
+
+
     }
 
 
 
+    private void transferFileFromMaster(File f) throws Exception {
+        Socket s = new Socket(slave.masterAddress.getHostName(), slave.masterAddress.getPort());
+        slave.newToMaster().setTransferFile(f.getName()).build().writeDelimitedTo(s.getOutputStream());
 
-    private void transferFile(File f, Socket s) {
         FileWriter fw = null;
         log.info("transfering file...");
         try {

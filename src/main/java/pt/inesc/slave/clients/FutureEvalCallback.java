@@ -26,7 +26,8 @@ public class FutureEvalCallback
         latch.countDown();
         long duration = (System.nanoTime() - start);
         StatusLine status = response.getStatusLine();
-        boolean ok = (status.getStatusCode() == 200);
+        int statusCode = status.getStatusCode();
+        boolean ok = (statusCode == 200 || statusCode == 302);
         if (!ok) {
             System.out.println(request.getRequestLine() + "->" + status.getStatusCode() + " " + status.getReasonPhrase());
         }

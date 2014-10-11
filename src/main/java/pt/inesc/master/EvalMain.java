@@ -99,7 +99,7 @@ public class EvalMain {
                     System.out.println("Files " + args[i]);
                     filePattern = args[i++];
                     break;
-                case "file-parallel":
+                case "fileParallel":
                     System.out.println("Files in parallel " + args[i]);
                     filePattern = args[i++];
                     fileParallel = true;
@@ -116,7 +116,7 @@ public class EvalMain {
                     System.out.println("Slaves: " + slaves);
                     break;
                 default:
-                    throw new Exception("Unknown option");
+                    throw new Exception("Unknown option: " + op);
                 }
             }
 
@@ -134,7 +134,7 @@ public class EvalMain {
             System.err.println(e.getMessage());
             System.out.println("Usage: <target_host>:<target_port>  \n "
                     + " --throughput  throughput per client: fixed; [start:end:step]; default: maximum  \n  "
-                    + " --file <filePattern> in serie \n" + "   --file-parallel <filePattern> files are executed in parallel \n"
+                    + " --file <filePattern> in serie \n" + "   --fileParallel <filePattern> files are executed in parallel \n"
                     + " --lines <numberOfLines> \n" + " --readPercentage <percentage of read operation: default: 0> \n"
                     + " --assync  assync: default is sync \n" + " --get <url> <times>  get the url x times \n"
                     + " --clients <number of concurrent clients> \n" + " --logDisk log to disk \n " + "  --directory directory \n"
@@ -144,7 +144,7 @@ public class EvalMain {
 
 
 
-        System.out.println("Rate     avg     90th percentil   95th percentil");
+        System.out.println("Total         Rate       avg          95th percentil   90th percentil     Data Received (Bytes)");
         int throughput;
         do {
             throughput = stepedThroughput[0];
@@ -161,8 +161,9 @@ public class EvalMain {
             }
 
             for (Report report : reports) {
-                System.out.println("-> " + report.transactionRate + "   " + report.averageResponseTime + "   " + report.percentil90
-                        + "    " + report.percentil95);
+                String summ = report.nTransactions + " " + report.transactionRate + " " + report.averageResponseTime + " "
+                        + report.percentil95 + " " + report.percentil95 + " " + report.dataReceived;
+                System.out.println(summ.replace(',', '.'));
             }
 
             if (stepedThroughput[2] == 0) {
@@ -203,17 +204,9 @@ public class EvalMain {
             throw new Exception("No files to exec");
         }
 
-        if (fileParallel) {
-            for (File f : filesToExec) {
-                for (int i = 0; i < clients; i++) {
-                    master.newFile(Arrays.asList(f), config, numberOfLines, readPercentage, perTopic);
-                }
-            }
-        } else {
-            for (int i = 0; i < clients; i++) {
-                master.newFile(filesToExec, config, numberOfLines, readPercentage, perTopic);
-            }
-        }
+        master.newFile(filesToExec, config, numberOfLines, readPercentage, perTopic, fileParallel);
+
+
         return master.startExec();
     }
 

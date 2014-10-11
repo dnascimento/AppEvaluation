@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -65,6 +66,8 @@ public abstract class ClientThread extends
 
     private FileOutputStream fileChannel;
 
+    private static AtomicInteger countRequests = new AtomicInteger(0);
+
     /**
      * @param clientId
      * @param targetHost
@@ -108,6 +111,9 @@ public abstract class ClientThread extends
 
 
     public void execRequest(HttpRequestBase request) {
+        if (request == null) {
+            return;
+        }
         if (stats == null) {
             // init statistics on first request
             stats = new Statistics();
@@ -156,14 +162,15 @@ public abstract class ClientThread extends
      * compared and the delay is adapted.
      */
     private void throughputControl() {
-        if (delay < 0) {
-            return;
-        }
+        countRequests.incrementAndGet();
+
         // delay the request to control the throughput
-        try {
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (delay > 0) {
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         long now = System.currentTimeMillis() / 1000;
@@ -174,16 +181,22 @@ public abstract class ClientThread extends
         if (now != currentSecound) {
             currentSecound = now;
             if (showRate-- == 0) {
-                System.out.println("Rate: " + requestRateSent);
+                System.out.println("Rate: " + requestRateSent + " total: " + countRequests.get());
                 showRate = SHOW_RATE_PERIOD;
             }
-            if (Math.abs(requestRateSent - requestRate) > (requestRate * THROUGHPUT_MARGIN)) {
-                delay = (delay == 0) ? 1000 : delay;
-                delay = (long) (delay * ((double) requestRateSent / requestRate));
+            if (delay >= 0) {
+                if (Math.abs(requestRateSent - requestRate) > (requestRate * THROUGHPUT_MARGIN)) {
+                    delay = (delay == 0) ? 1000 : delay;
+                    delay = (long) (delay * ((double) requestRateSent / requestRate));
+                }
             }
             requestRateSent = 0;
         }
         requestRateSent++;
     }
 
+    /**
+     * Force to terminate the thread
+     */
+    public abstract void over();
 }
